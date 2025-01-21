@@ -21,6 +21,9 @@ const styles = StyleSheet.create({
     width: '62%',
     alignSelf: 'center',
   },
+  dateHeader: {
+    backgroundColor: "#00AD56"
+  },
   formGroup: { 
     marginBottom: 16,
   },

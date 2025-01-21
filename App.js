@@ -17,6 +17,9 @@ import { IconButton } from 'react-native-paper';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import DatePicker from 'react-native-date-picker';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import DateSelection from './DateSelection';
 import { useFonts } from 'expo-font';
 import { RussoOne_400Regular } from '@expo-google-fonts/russo-one';
 import { Lato_700Bold, Lato_400Regular } from '@expo-google-fonts/lato';
@@ -25,9 +28,7 @@ import styles from './styles';
 const IntroImage = require('./Saving money-amico.png');
 const LogoImg = require('./Logo.png');
 
-
-
-const SavingsGoalScreen = () => {
+const SavingsGoalScreen = ({ navigation }) => {
   // Load fonts
   const [fontsLoaded] = useFonts({
     RussoOne_400Regular,
@@ -300,7 +301,9 @@ const SavingsGoalScreen = () => {
         <TouchableOpacity style={styles.skipButton}>
           <Text style={styles.skipButtonText}>Skip</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.nextButton}>
+        <TouchableOpacity style={styles.nextButton}
+        onPress={() => navigation.navigate('Summary')}
+        >
             <Text style={styles.buttonText}>Next</Text>
           </TouchableOpacity>
         </View>
@@ -309,4 +312,24 @@ const SavingsGoalScreen = () => {
   );
 };
 
-export default SavingsGoalScreen;
+/*onst SummaryScreen = () => {
+  return (
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <Text style={{ fontSize: 24, fontWeight: 'bold' }}>Summary Screen</Text>
+    </View>
+  );
+};*/
+
+const Stack = createStackNavigator();
+
+const App = () => {
+  return (
+    <NavigationContainer>
+      <Stack.Navigator initialRouteName="SavingsGoal">
+        <Stack.Screen name="SavingsGoal" component={SavingsGoalScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="Summary" component={DateSelection} options={{ title: 'Summary' }} />
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+};
+export default App;
