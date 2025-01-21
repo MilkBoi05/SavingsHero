@@ -1,7 +1,8 @@
 import { StyleSheet, Platform } from 'react-native';
 
 const styles = StyleSheet.create({
-  container: {  backgroundColor: '#fff' },
+  container: {  backgroundColor: '#fff'
+  },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: {
     flexDirection: 'row', alignItems: 'center', marginBottom: 8, gap: 8, marginTop: 12},
@@ -33,14 +34,19 @@ const styles = StyleSheet.create({
     color: '#434343',
     marginBottom: 4,
   },
+  bottomLabel: {
+    marginBottom: 12,
+    paddingBottom: 12
+  },
   input: {
     borderWidth: 1,
     borderColor: '#E0E0E0',
     borderRadius: 8,
     padding: 12,
-    marginBottom: 16,
+    marginBottom: 24,
     fontSize: 16,
-    placeholderTextColor: '#8E9AA5'
+    placeholderTextColor: '#8E9AA5',
+    color: "#434343"
   },
   dropdown: {
     borderWidth: 1,
@@ -48,7 +54,8 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     marginBottom: 16,
-    fontSize:11
+    fontSize:16,
+    color: "#898989"
   },
   placeholderStyle: {
     color: '#8E9AA5', // Set placeholder color
@@ -121,11 +128,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
-  skipButtonText: { color: '#7B42F8', fontWeight: 'bold', fontSize: 16 },
+  skipButtonText: { color: '#A23DEF', fontWeight: 'bold', fontSize: 16 },
   nextButton: {
     flex: 1,
     marginLeft: 8,
-    backgroundColor: '#7B42F8',
+    backgroundColor: '#A23DEF',
     padding: 19,
     borderRadius: 8,
     alignItems: 'center',
@@ -137,22 +144,35 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 3,
     backgroundColor: '#fff',
-    marginBottom: 24,
+    marginBottom: 16,
   },
   toggleButtonGroup: {
     flexDirection: 'row',
     position: 'relative',
     height: 40,
-//
-    borderRadius: 12,
+    borderRadius: 8,
     overflow: 'hidden',
+  },
+  dateButton: {
+    color: '#434343',
+    backgroundColor: "red",
+    buttonTextColorIOS: 'red'
+  },
+  openModalButtonText: {
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+    fontSize: 16,
+    placeholderTextColor: '#8E9AA5'
   },
   slider: {
     position: 'absolute',
     width: '50%', // Half the width of the toggle group
     height: '100%',
-    backgroundColor: '#D0A8F3',
-    borderRadius: 12,
+    backgroundColor: '#F3E3FF',
+    borderRadius: 8,
   },
   toggleButton: {
     flex: 1,
@@ -166,7 +186,10 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   toggleTextSelected: {
-    color: '#fff', // White text for selected option
+    color: '#a23def', // White text for selected option
+  },
+  buffer: {
+    height: 50, // Adjust this as needed
   },
 });
 
