@@ -22,7 +22,49 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   dateHeader: {
-    backgroundColor: "#00AD56"
+    backgroundColor: "#A23DEF",
+    padding: 16,
+    alignItems: 'center',
+    paddingTop: 72,
+    gap:24,
+    paddingBottom: 24
+  },
+  goalDateContainer: {
+     alignItems: 'center',
+     gap: 12
+  },
+  formContainer: {
+    padding: 16,
+  },
+  headerText: {
+    fontFamily: 'Lato_700Bold',
+    fontSize:22,
+    color: 'white',
+    textAlign: 'center',
+    width: 300
+  },
+  goalDate: {
+    fontFamily: 'Merriweather_900Black',
+    color: 'white',
+    fontSize: 34
+  },
+  goalDuration: {
+    fontFamily: 'Merriweather_700Bold',
+    color: 'white',
+    fontSize: 20
+  },
+  adjustmentButtons: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  adjustButton: {
+    color: 434343,
+    backgroundColor: '#FFFFFF',
+    padding: 8,
+    marginHorizontal: 4,
+    borderRadius: 4,
+    width: 86,
+    alignItems: 'center'
   },
   formGroup: { 
     marginBottom: 16,
@@ -90,6 +132,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
+  textArea: {
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 24,
+    fontSize: 16,
+    placeholderTextColor: '#B2B7C3',
+    color: "#434343",
+    height: 96
+  },
   dateInput: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -102,6 +155,22 @@ const styles = StyleSheet.create({
   },
   dateText:{
     fontSize: 16,
+  },
+  imageUploadButton: {
+    borderWidth: 2,
+    borderColor: '#E0E0E0',
+    borderRadius: 8,
+    height: 72,
+    width: 72,
+    flex: 1,
+    justifyContent: 'center', // Aligns vertically (top, center, or bottom)
+    alignItems: 'center',
+    borderStyle: 'dashed', 
+    
+  },
+  imageUploadText: {
+    fontSize: 32,
+    color: '#B2B7C3'
   },
   calendarIcon: { 
     marginLeft: -8, 
@@ -158,8 +227,6 @@ const styles = StyleSheet.create({
   },
   dateButton: {
     color: '#434343',
-    backgroundColor: "red",
-    buttonTextColorIOS: 'red'
   },
   openModalButtonText: {
     borderWidth: 1,
@@ -193,6 +260,31 @@ const styles = StyleSheet.create({
   },
   buffer: {
     height: 50, // Adjust this as needed
+  },
+  sliderContainer: {
+    height: 100,
+    backgroundColor: '#1FA849', // Green background
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tickContainer: {
+    width: 50,
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+  },
+  selectedTick: {
+    height: 60,
+  },
+  tickText: {
+    fontSize: 12,
+  },
+  selectedTickText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  defaultTickText: {
+    color: 'rgba(255, 255, 255, 0.5)',
   },
 });
 

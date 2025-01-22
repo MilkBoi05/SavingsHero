@@ -23,7 +23,9 @@ import DateSelection from './DateSelection';
 import { useFonts } from 'expo-font';
 import { RussoOne_400Regular } from '@expo-google-fonts/russo-one';
 import { Lato_700Bold, Lato_400Regular } from '@expo-google-fonts/lato';
+
 import styles from './styles';
+import DateSelectionScreen from './DateSelection';
 
 const IntroImage = require('./Saving money-amico.png');
 const LogoImg = require('./Logo.png');
@@ -180,7 +182,7 @@ const SavingsGoalScreen = ({ navigation }) => {
 
               <View style={styles.rowGroup}>
                 <View style={styles.halfInput}>
-                  <Text style={styles.label}>Saving amount</Text>
+                  <Text style={styles.label}>Contribution amount</Text>
                   <TextInput
                     style={styles.input}
                     value={values.savingAmount === '$' ? '' : values.savingAmount}
@@ -191,7 +193,7 @@ const SavingsGoalScreen = ({ navigation }) => {
                   />
                 </View>
                 <View style={styles.halfInput}>
-                  <Text style={styles.label}>Saving recurrence</Text>
+                  <Text style={styles.label}>Frequency</Text>
                   <Dropdown
                     style={styles.dropdown}
                     data={recurrenceOptions}
@@ -289,6 +291,11 @@ const SavingsGoalScreen = ({ navigation }) => {
               <TextInput style={styles.input}
               value={values.currentlySaved === '$' ? '' : values.currentlySaved}
               onChangeText={(text) => handleChangeText('currentlySaved', text)} 
+              onBlur={() => {
+                if (values.currentlySaved === '$') {
+                  handleChangeText('currentlySaved', '0'); // Set to $0 if left empty
+                }
+              }}
               placeholder="$0" 
               keyboardType="numeric" />
             </View>
@@ -301,11 +308,29 @@ const SavingsGoalScreen = ({ navigation }) => {
         <TouchableOpacity style={styles.skipButton}>
           <Text style={styles.skipButtonText}>Skip</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.nextButton}
-        onPress={() => navigation.navigate('Summary')}
-        >
-            <Text style={styles.buttonText}>Next</Text>
-          </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.nextButton}
+          onPress={() => {
+            // Check if "currentlySaved" is empty or invalid
+            if (!values.currentlySaved || values.currentlySaved === '$') {
+              handleChangeText('currentlySaved', '0'); // Set to $0 if empty or invalid
+            }
+
+            // Navigate to the next screen
+              navigation.navigate('DateSelection', {
+                startDate: selectedDate, // Pass selected start date
+                savingsGoal: parseFloat(values.goalAmount.replace(/[^0-9.]/g, '')) || 0, // Default to 0 if invalid
+                savingAmount: parseFloat(values.savingAmount.replace(/[^0-9.]/g, '')) || 0, // Default to 0 if invalid
+                frequency: savingRecurrence, // Weekly, Monthly, etc.
+                currentlySaved: parseFloat(
+                  values.currentlySaved.replace(/[^0-9.]/g, '')
+                ) || 0, // Default to 0 if invalid
+              });
+            }}
+          >
+          <Text style={styles.buttonText}>Next</Text>
+        </TouchableOpacity>
+
         </View>
       </View>
     
@@ -327,7 +352,7 @@ const App = () => {
     <NavigationContainer>
       <Stack.Navigator initialRouteName="SavingsGoal">
         <Stack.Screen name="SavingsGoal" component={SavingsGoalScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="Summary" component={DateSelection} options={{ title: 'Summary' }} />
+        <Stack.Screen name="DateSelection" component={DateSelectionScreen} options={{ headerShown: false }} />
       </Stack.Navigator>
     </NavigationContainer>
   );
