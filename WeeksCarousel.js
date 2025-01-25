@@ -1,45 +1,82 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useImperativeHandle, forwardRef, useEffect } from 'react';
 import { View, Text, FlatList, StyleSheet, Dimensions } from 'react-native';
+import _ from 'lodash';
 
 const screenWidth = Dimensions.get('window').width;
 const visibleItems = 7;
 const itemWidth = screenWidth / visibleItems;
 
-const WeeksCarousel = ({ data, selectedWeek, onScrollWeekChange, onWeekChange, scrollToWeek }) => {
+
+const WeeksCarousel = forwardRef(({ data, selectedWeek, onScrollWeekChange, onWeekChange }, ref) => {
   const flatListRef = useRef(null);
-
-  useEffect(() => {
-    if (flatListRef.current && scrollToWeek !== null) {
-      const index = data.indexOf(scrollToWeek);
-      if (index >= 0) {
-        console.log(`Scrolling to week: ${scrollToWeek} at index ${index}`);
-        setTimeout(() => {
-          flatListRef.current.scrollToIndex({
-            index,
-            animated: true,
-          });
-        }, 0); // Delay to ensure FlatList is ready
+  
+  const debouncedScroll = useRef(
+    _.debounce((week) => {
+      if (onScrollWeekChange) {
+        onScrollWeekChange(week);
       }
-    }
-  }, [scrollToWeek]);
+    }, 100)
+  ).current;
 
-  const handleScroll = (event) => {
-    const offsetX = event.nativeEvent.contentOffset.x;
-    const index = Math.round(offsetX / itemWidth);
-
-    if (onScrollWeekChange) {
-      onScrollWeekChange(data[index]);
-    }
-  };
-
+//   useEffect(() => {
+//     if (selectedWeek && flatListRef.current) {
+//       const index = data.findIndex((item) => item === selectedWeek);
+//       if (index >= 0) {
+//         setScrollLock(true); // Lock updates during programmatic scrolling
+//         flatListRef.current.scrollToIndex({
+//           index,
+//           animated: true,
+//         });
+//         setTimeout(() => setScrollLock(false), 300); // Unlock after animation completes
+//       }
+//     }
+//   }, [selectedWeek]);
+  
+  
+ 
+const handleScroll = useRef(
+    _.throttle((event) => {
+      if (!event || !event.nativeEvent || !event.nativeEvent.contentOffset) {
+        return; // Exit early if event or contentOffset is null
+      }
+  
+      const offsetX = event.nativeEvent.contentOffset.x;
+      const interpolatedIndex = offsetX / itemWidth; // Calculate fractional index
+      const interpolatedWeek = Math.round(interpolatedIndex + 1); // Approximate the week (1-based)
+  
+      if (onScrollWeekChange) {
+        onScrollWeekChange(data[interpolatedWeek - 1]); // Call parent with smooth updates
+      }
+    }, 100)
+  ).current;
+  
   const handleScrollEnd = (event) => {
+    if (!event || !event.nativeEvent || !event.nativeEvent.contentOffset) {
+      return; // Exit early if event or contentOffset is null
+    }
+  
     const offsetX = event.nativeEvent.contentOffset.x;
-    const index = Math.round(offsetX / itemWidth);
-
+    const index = Math.round(offsetX / itemWidth); // Snap to the nearest week index
+  
     if (onWeekChange) {
-      onWeekChange(data[index]);
+      onWeekChange(data[index]); // Finalize the week on momentum scroll end
     }
   };
+  
+  
+  useImperativeHandle(ref, () => ({
+    scrollToWeek: (week) => {
+      const index = data.findIndex((item) => item === week);
+      if (index >= 0 && flatListRef.current) {
+        // setScrollLock(true); // Lock updates during programmatic scrolling
+        flatListRef.current.scrollToIndex({
+          index,
+          animated: true,
+        });
+        // setTimeout(() => setScrollLock(false), 300); // Unlock after scroll completes
+      }
+    },
+  }));
 
   const renderItem = ({ item }) => {
     const isSelected = item === selectedWeek;
@@ -55,6 +92,11 @@ const WeeksCarousel = ({ data, selectedWeek, onScrollWeekChange, onWeekChange, s
           ]}
         />
         <Text style={[styles.weekText, isSelected && styles.selectedWeekText]}>{item}</Text>
+        {isSelected && (
+          <Text style={[styles.weekText, styles.selectedWeeksText]}>
+              weeks
+            </Text>
+        )}
       </View>
     );
   };
@@ -81,17 +123,17 @@ const WeeksCarousel = ({ data, selectedWeek, onScrollWeekChange, onWeekChange, s
         index,
       })}
       onScrollToIndexFailed={(error) => {
-        console.warn("Scroll to index failed:", error);
         if (flatListRef.current) {
           flatListRef.current.scrollToOffset({
             offset: error.averageItemLength * error.index,
-            animated: true,
+            animated: false, // Disable animation for initial scroll
           });
         }
       }}
+      
     />
   );
-};
+});
 
 const styles = StyleSheet.create({
   itemContainer: {
@@ -107,7 +149,7 @@ const styles = StyleSheet.create({
   weekText: {
     fontSize: 14,
     fontWeight: '600',
-    color: 'white'
+    color: 'white',
   },
   selectedWeekText: {
     fontSize: 20,

@@ -10,7 +10,8 @@ import {
   Animated,
   Button,
   KeyboardAvoidingView,
-  Platform
+  Platform,
+  useWindowDimensions
 } from 'react-native';
 import { Dropdown } from 'react-native-element-dropdown';
 import { IconButton } from 'react-native-paper';
@@ -30,7 +31,7 @@ import DateSelectionScreen from './DateSelection';
 const IntroImage = require('./Saving money-amico.png');
 const LogoImg = require('./Logo.png');
 
-const SavingsGoalScreen = ({ navigation }) => {
+const SavingsGoalScreen = ({ navigation, route }) => {
   // Load fonts
   const [fontsLoaded] = useFonts({
     RussoOne_400Regular,
@@ -41,15 +42,18 @@ const SavingsGoalScreen = ({ navigation }) => {
   // Component states
   
   const [isPickerVisible, setPickerVisible] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(new Date());
   const [values, setValues] = useState({
-    goalAmount: '$',
-    savingAmount: '$',
-    currentlySaved: '$',
+    goalAmount: route?.params?.updatedSavingsGoal || '$',
+    savingAmount: route?.params?.updatedSavingAmount || '$',
+    currentlySaved: route?.params?.updatedCurrentlySaved || '$',
   });
   const [goalType, setGoalType] = useState(null);
-
-  
+  const [selectedDate, setSelectedDate] = useState(
+    route?.params?.startDate || new Date()
+  );
+  const [savingRecurrence, setSavingRecurrence] = useState(
+    route?.params?.frequency || 'weekly'
+  );
 
   const [startDate, setStartDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -63,7 +67,7 @@ const SavingsGoalScreen = ({ navigation }) => {
   const showPicker = () => setPickerVisible(true);
   const hidePicker = () => setPickerVisible(false);
 
-  
+  const [errors, setErrors] = useState({ goalAmount: '', savingAmount: '' });
 
   // Animated sliding fill
   const slideAnim = useRef(new Animated.Value(paymentType === 'Automatically' ? 0 : 1)).current;
@@ -91,6 +95,43 @@ const SavingsGoalScreen = ({ navigation }) => {
     }));
   };
   
+  const validateFields = (values) => {
+    const errors = {};
+  
+    const goalAmountValue = parseFloat(values.goalAmount.replace(/[^0-9.]/g, '')) || 0;
+    const savingAmountValue = parseFloat(values.savingAmount.replace(/[^0-9.]/g, '')) || 0;
+  
+    // Validate Goal Amount
+    if (goalAmountValue <= 0) {
+      errors.goalAmount = 'Goal amount must be greater than $0';
+    }
+  
+    // Validate Contribution Amount
+    if (savingAmountValue <= 0) {
+      errors.savingAmount = 'Contribution amount must be greater than $0';
+    }
+  
+    // Validate Contribution <= Goal Amount
+    if (savingAmountValue > goalAmountValue) {
+      errors.savingAmount = 'Contribution amount cannot be greater than goal amount';
+    }
+  
+    return errors;
+  };
+
+  const handleNextPress = () => {
+    if (!validateFields()) {
+      return; // Stop navigation if validation fails
+    }
+
+    navigation.navigate('DateSelection', {
+      startDate: selectedDate,
+      savingsGoal: parseFloat(values.goalAmount.replace(/[^0-9.]/g, '')),
+      savingAmount: parseFloat(values.savingAmount.replace(/[^0-9.]/g, '')),
+      frequency: savingRecurrence,
+      currentlySaved: parseFloat(values.currentlySaved.replace(/[^0-9.]/g, '')) || 0,
+    });
+  };
 
   const slidePosition = slideAnim.interpolate({
     inputRange: [0, 1],
@@ -110,9 +151,9 @@ const SavingsGoalScreen = ({ navigation }) => {
     { label: 'Monthly', value: 'monthly' },
   ];
 
-  const [savingRecurrence, setSavingRecurrence] = useState(
-    recurrenceOptions.length > 0 ? recurrenceOptions[0].value : '' // Fallback to empty string
-  );
+  const [textColor, setTextColor] = useState('black');
+
+
 
   if (!fontsLoaded) {
     return (
@@ -179,6 +220,7 @@ const SavingsGoalScreen = ({ navigation }) => {
                 placeholderTextColor="#8E9AA5"
                 keyboardType="numeric"
               />
+              {errors.goalAmount ? <Text style={styles.errorText}>{errors.goalAmount}</Text> : null}
 
               <View style={styles.rowGroup}>
                 <View style={styles.halfInput}>
@@ -191,6 +233,7 @@ const SavingsGoalScreen = ({ navigation }) => {
                     placeholderTextColor="#8E9AA5"
                     keyboardType="numeric"
                   />
+                  {errors.savingAmount ? <Text style={styles.errorText}>{errors.savingAmount}</Text> : null}
                 </View>
                 <View style={styles.halfInput}>
                   <Text style={styles.label}>Frequency</Text>
@@ -260,10 +303,6 @@ const SavingsGoalScreen = ({ navigation }) => {
                       year: 'numeric',
                       month: 'short',
                       day: '2-digit',
-                    }).format(selectedDate)} ${new Intl.DateTimeFormat('en-GB', {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                      hour12: true, // Set to `false` for 24-hour format
                     }).format(selectedDate)}`}
                   </Text>
 
@@ -272,15 +311,27 @@ const SavingsGoalScreen = ({ navigation }) => {
                 {/* Modal Date Picker */}
                 <DateTimePickerModal
                   isVisible={isPickerVisible}
-                  buttonTextColorIOS= "#a23DEF"
-                  mode="datetime" // Use "date", "time", or "datetime" mode
+                  buttonTextColorIOS="#a23DEF"
+                  display='inline'
+                  textColor={textColor}
+                  themeVariant="light"
+                  mode="date"
+                  // modalStyleIOS={{
+                  //   alignItems: 'center',
+                  //   width: 400,
+                  //   paddingLeft: 12
+                  // }}
+                  // pickerContainerStyleIOS={{
+                  //   alignItems: 'center',
+                  //   width: 400,
+                  //   paddingLeft: 0
+                  // }}
                   onConfirm={(date) => {
                     console.log("Confirmed date:", date);
-                    setSelectedDate(date); // Update the selected date state
-                    hidePicker(); // Close the picker after confirming
+                    setSelectedDate(date);
+                    hidePicker();
                   }}
-                  onCancel={hidePicker} // Close the picker without updating the state
-                  
+                  onCancel={hidePicker}
                 />
 
 
@@ -308,27 +359,28 @@ const SavingsGoalScreen = ({ navigation }) => {
         <TouchableOpacity style={styles.skipButton}>
           <Text style={styles.skipButtonText}>Skip</Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.nextButton}
-          onPress={() => {
-            // Check if "currentlySaved" is empty or invalid
-            if (!values.currentlySaved || values.currentlySaved === '$') {
-              handleChangeText('currentlySaved', '0'); // Set to $0 if empty or invalid
-            }
-
-            // Navigate to the next screen
-              navigation.navigate('DateSelection', {
-                startDate: selectedDate, // Pass selected start date
-                savingsGoal: parseFloat(values.goalAmount.replace(/[^0-9.]/g, '')) || 0, // Default to 0 if invalid
-                savingAmount: parseFloat(values.savingAmount.replace(/[^0-9.]/g, '')) || 0, // Default to 0 if invalid
-                frequency: savingRecurrence, // Weekly, Monthly, etc.
-                currentlySaved: parseFloat(
-                  values.currentlySaved.replace(/[^0-9.]/g, '')
-                ) || 0, // Default to 0 if invalid
-              });
-            }}
-          >
-          <Text style={styles.buttonText}>Next</Text>
+        <TouchableOpacity style={styles.nextButton} 
+        
+        onPress={() => {
+          const validationErrors = validateFields(values); // Call the validation function
+      
+          if (Object.keys(validationErrors).length > 0) {
+            setErrors(validationErrors); // Display validation errors
+            return; // Prevent navigation
+          }
+      
+          // If no errors, navigate to the next screen
+          setErrors({}); // Clear any previous errors
+          navigation.navigate('DateSelection', {
+            startDate: selectedDate, // Pass selected start date
+            savingsGoal: parseFloat(values.goalAmount.replace(/[^0-9.]/g, '')) || 0,
+            savingAmount: parseFloat(values.savingAmount.replace(/[^0-9.]/g, '')) || 0,
+            frequency: savingRecurrence,
+            currentlySaved: parseFloat(values.currentlySaved.replace(/[^0-9.]/g, '')) || 0,
+          });
+        }}
+        >
+        <Text style={styles.buttonText}>Next</Text>
         </TouchableOpacity>
 
         </View>

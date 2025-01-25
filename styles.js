@@ -1,4 +1,5 @@
 import { StyleSheet, Platform } from 'react-native';
+import { Merriweather_700Bold, Merriweather_900Black } from '@expo-google-fonts/merriweather';
 
 const styles = StyleSheet.create({
   container: {  backgroundColor: '#fff'
@@ -160,9 +161,8 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#E0E0E0',
     borderRadius: 8,
-    height: 72,
-    width: 72,
-    flex: 1,
+    height: 120,
+    width: 120,
     justifyContent: 'center', // Aligns vertically (top, center, or bottom)
     alignItems: 'center',
     borderStyle: 'dashed', 
@@ -285,6 +285,46 @@ const styles = StyleSheet.create({
   },
   defaultTickText: {
     color: 'rgba(255, 255, 255, 0.5)',
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 12,
+    marginTop: -24,
+    marginBottom: 24
+  },
+  imageUploadContainer: {
+    flexDirection: 'row',
+    gap: 12
+  },
+  // imageUploadButton: {
+  //   backgroundColor: '#007BFF',
+  //   padding: 10,
+  //   borderRadius: 5,
+  //   marginRight: 10,
+  // },
+  // imageUploadText: {
+  //   color: 'white',
+  //   fontWeight: 'bold',
+  //   textAlign: 'center',
+  // },
+  removeButton: {
+    position: 'absolute',
+    top: 0, // Add some padding from the top edge
+    right: 0, // Add some padding from the right edge
+    backgroundColor: '#fff',
+    width: 30, // Slightly larger button for usability
+    height: 30,
+    borderRadius: 100, // Make it circular
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3, // Ensure it appears above the image,
+  },
+  removeButtonText: {
+    fontSize: 24
   },
 });
 
