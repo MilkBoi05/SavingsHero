@@ -124,7 +124,7 @@ const DateSelectionScreen = ({ navigation, route }) => {
     const debounceTimer = useRef(null);
   
     return (week) => {
-      if (scrollLock) {
+      if (isManualInput) {
         return; // Ignore updates if scrollLock is active
       }
   
@@ -150,6 +150,8 @@ const DateSelectionScreen = ({ navigation, route }) => {
         clearTimeout(debounceTimer.current);
       }
   
+      console.log('Manual Input Active:', isManualInput);
+
       // Debounced savings amount update
       debounceTimer.current = setTimeout(() => {
         if (!isManualInput) { // Avoid overwriting manually entered values
@@ -157,6 +159,7 @@ const DateSelectionScreen = ({ navigation, route }) => {
   
           if (remainingAmount > 0 && week > 0) {
             const calculatedSavingAmount = remainingAmount / week;
+            setCalculatedSavingAmount(calculatedSavingAmount); // Update calculated value
             setUpdatedSavingAmount(calculatedSavingAmount); // Update savings amount after debounce
           }
         }
@@ -168,7 +171,7 @@ const DateSelectionScreen = ({ navigation, route }) => {
   
   const handleWeekChange = (week) => {
     // Ignore updates if scrollLock is active
-    if (scrollLock) {
+    if (isManualInput) {
       return;
     }
   
@@ -205,12 +208,18 @@ const DateSelectionScreen = ({ navigation, route }) => {
   useEffect(() => {
     if (!isManualInput && goalDuration > 0) {
       const remainingAmount = savingsGoal - currentlySaved;
-      const calculatedAmount = remainingAmount / goalDuration;
   
-      setCalculatedSavingAmount(calculatedAmount); // Update calculated value
-      setUpdatedSavingAmount(calculatedAmount); // Only update if not manually entered
+      if (remainingAmount > 0) {
+        const calculatedAmount = remainingAmount / goalDuration;
+        setCalculatedSavingAmount(calculatedAmount); // For display
+        setUpdatedSavingAmount(calculatedAmount); // Only update if not manually entered
+      }
+
+      console.log('Manual Input Active:', isManualInput);
+
     }
   }, [goalDuration, isManualInput, savingsGoal, currentlySaved]);
+  
   
   
   
@@ -223,6 +232,7 @@ const DateSelectionScreen = ({ navigation, route }) => {
   
     // Set the manual input flag
     setIsManualInput(true);
+    console.log('Manual Input Flag Set:', true);
   
     // Update the manually entered savings amount
     setUpdatedSavingAmount(inputAmount);
@@ -323,7 +333,7 @@ const DateSelectionScreen = ({ navigation, route }) => {
           </Text>
           <View style={styles.goalDateContainer}>
             <Text style={styles.goalDate}>{goalDate}</Text>
-            <Text style={styles.goalDuration}>{formatDuration(goalDuration)}</Text> {/* Use formatted duration */}
+            <Text style={styles.goalDuration}>{formatDuration(goalDuration) }</Text>
           </View>
           {goalDuration > 0 && (
             <WeeksCarousel
@@ -346,7 +356,7 @@ const DateSelectionScreen = ({ navigation, route }) => {
               <Text style={styles.label}>Saving amount</Text>
               <TextInput
                 style={styles.input}
-                value={`$${Math.round(isManualInput ? updatedSavingAmount : calculatedSavingAmount)}`}
+                value={`$${Math.round(isManualInput ? updatedSavingAmount : calculatedSavingAmount) || 0}`}
                 onChangeText={handleSavingAmountChange} // Handle manual input
                 placeholderTextColor="#8E9AA5"
                 keyboardType="numeric"

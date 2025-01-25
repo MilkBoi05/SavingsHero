@@ -34,13 +34,8 @@ const WeeksCarousel = forwardRef(({ data, selectedWeek, onScrollWeekChange, onWe
   
   
  
-const handleScroll = useRef(
-    _.throttle((event) => {
-      if (!event || !event.nativeEvent || !event.nativeEvent.contentOffset) {
-        return; // Exit early if event or contentOffset is null
-      }
-  
-      const offsetX = event.nativeEvent.contentOffset.x;
+  const handleScroll = useRef(
+    _.throttle((offsetX) => {
       const interpolatedIndex = offsetX / itemWidth; // Calculate fractional index
       const interpolatedWeek = Math.round(interpolatedIndex + 1); // Approximate the week (1-based)
   
@@ -49,6 +44,14 @@ const handleScroll = useRef(
       }
     }, 100)
   ).current;
+  
+  const handleScrollEvent = (event) => {
+    if (event?.nativeEvent?.contentOffset?.x != null) {
+      const offsetX = event.nativeEvent.contentOffset.x;
+      handleScroll(offsetX); // Pass only `offsetX` to the throttled function
+    }
+  };
+  
   
   const handleScrollEnd = (event) => {
     if (!event || !event.nativeEvent || !event.nativeEvent.contentOffset) {
@@ -111,7 +114,7 @@ const handleScroll = useRef(
       showsHorizontalScrollIndicator={false}
       snapToInterval={itemWidth}
       decelerationRate="fast"
-      onScroll={handleScroll}
+      onScroll={handleScrollEvent}
       onMomentumScrollEnd={handleScrollEnd}
       scrollEventThrottle={16}
       contentContainerStyle={{
