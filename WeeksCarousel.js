@@ -7,7 +7,7 @@ const visibleItems = 7;
 const itemWidth = screenWidth / visibleItems;
 
 
-const WeeksCarousel = forwardRef(({ data, selectedWeek, onScrollWeekChange, onWeekChange }, ref) => {
+const WeeksCarousel = forwardRef(({ data, selectedWeek, onScrollWeekChange, onWeekChange, lockScroll, setScrollLock }, ref) => {
   const flatListRef = useRef(null);
   
   const debouncedScroll = useRef(
@@ -46,40 +46,45 @@ const WeeksCarousel = forwardRef(({ data, selectedWeek, onScrollWeekChange, onWe
   ).current;
   
   const handleScrollEvent = (event) => {
-    if (event?.nativeEvent?.contentOffset?.x != null) {
-      const offsetX = event.nativeEvent.contentOffset.x;
-      handleScroll(offsetX); // Pass only `offsetX` to the throttled function
+    console.log('Scroll Event Fired: lockScroll =', lockScroll);
+    if (lockScroll) return; // Skip updates during programmatic scrolling
+  
+    const offsetX = event?.nativeEvent?.contentOffset?.x;
+    if (offsetX != null) {
+      handleScroll(offsetX); // Trigger throttled updates
     }
   };
-  
   
   const handleScrollEnd = (event) => {
-    if (!event || !event.nativeEvent || !event.nativeEvent.contentOffset) {
-      return; // Exit early if event or contentOffset is null
-    }
+    console.log('Scroll End Event Fired: lockScroll =', lockScroll)
+    if (lockScroll) return; // Skip updates during programmatic scrolling
   
     const offsetX = event.nativeEvent.contentOffset.x;
-    const index = Math.round(offsetX / itemWidth); // Snap to the nearest week index
+    const index = Math.round(offsetX / itemWidth);
   
     if (onWeekChange) {
-      onWeekChange(data[index]); // Finalize the week on momentum scroll end
+      onWeekChange(data[index]); // Finalize updates
     }
   };
+  
   
   
   useImperativeHandle(ref, () => ({
     scrollToWeek: (week) => {
       const index = data.findIndex((item) => item === week);
       if (index >= 0 && flatListRef.current) {
-        // setScrollLock(true); // Lock updates during programmatic scrolling
+        if (setScrollLock) setScrollLock(true); // Lock updates
         flatListRef.current.scrollToIndex({
           index,
           animated: true,
         });
-        // setTimeout(() => setScrollLock(false), 300); // Unlock after scroll completes
+        setTimeout(() => {
+          if (setScrollLock) setScrollLock(false); // Unlock updates after scroll finishes
+        }, 300);
       }
     },
   }));
+  
 
   const renderItem = ({ item }) => {
     const isSelected = item === selectedWeek;

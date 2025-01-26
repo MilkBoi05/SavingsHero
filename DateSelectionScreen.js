@@ -15,6 +15,7 @@ import { Merriweather_700Bold, Merriweather_900Black } from '@expo-google-fonts/
 import { Lato_700Bold, Lato_400Regular } from '@expo-google-fonts/lato';
 import styles from './styles';
 import { MaterialIcons } from '@expo/vector-icons';
+import NotificationsOnboarding from './NotificationsOnboarding';
 
 
 const DateSelectionScreen = ({ navigation, route }) => {
@@ -38,7 +39,7 @@ const DateSelectionScreen = ({ navigation, route }) => {
   const debounceTimer = useRef(null); // Declare this at the top of your component
   const [isManualInput, setIsManualInput] = useState(false); // Track if the input is manual
   const [calculatedSavingAmount, setCalculatedSavingAmount] = useState(savingAmount); // New state
-  const [scrollLock, setScrollLock] = useState(false);
+  const [lockScroll, setScrollLock] = useState(false);
   const [uploadedImages, setUploadedImages] = useState([]);
 
 
@@ -121,9 +122,12 @@ const DateSelectionScreen = ({ navigation, route }) => {
   
 
   const handleScrollWeekChange = (() => {
+
     const debounceTimer = useRef(null);
   
     return (week) => {
+      if (lockScroll) return;
+
       if (isManualInput) {
         return; // Ignore updates if scrollLock is active
       }
@@ -150,7 +154,7 @@ const DateSelectionScreen = ({ navigation, route }) => {
         clearTimeout(debounceTimer.current);
       }
   
-      console.log('Manual Input Active:', isManualInput);
+      console.log('Manual Input Active SCroll Week:', isManualInput);
 
       // Debounced savings amount update
       debounceTimer.current = setTimeout(() => {
@@ -171,6 +175,8 @@ const DateSelectionScreen = ({ navigation, route }) => {
   
   const handleWeekChange = (week) => {
     // Ignore updates if scrollLock is active
+    if (lockScroll) return; 
+
     if (isManualInput) {
       return;
     }
@@ -233,6 +239,7 @@ const DateSelectionScreen = ({ navigation, route }) => {
     // Set the manual input flag
     setIsManualInput(true);
     console.log('Manual Input Flag Set:', true);
+
   
     // Update the manually entered savings amount
     setUpdatedSavingAmount(inputAmount);
@@ -248,7 +255,7 @@ const DateSelectionScreen = ({ navigation, route }) => {
       if (remainingAmount > 0 && inputAmount > 0) {
         const calculatedWeeks = Math.ceil(remainingAmount / inputAmount); // Calculate weeks
         setGoalDuration(calculatedWeeks); // Update goal duration
-        setScrollingWeek(calculatedWeeks); // Sync carousel with weeks
+        // setScrollingWeek(calculatedWeeks); // Sync carousel with weeks
   
         // Update goal date
         const newGoalDate = new Date(startDate);
@@ -265,10 +272,15 @@ const DateSelectionScreen = ({ navigation, route }) => {
         setDisplayDuration(`${months} months${weeks > 0 ? `, ${weeks}` : ''}`);  
 
         if (carouselRef.current) {
+          setScrollLock(true); // Lock updates during programmatic scrolling
           carouselRef.current.scrollToWeek(calculatedWeeks); // Sync carousel
+          setTimeout(() => setScrollLock(false), 300); // Unlock after scrolling finishes
         }
       }
     }, 500); // Debounce delay
+    console.log('Calc Saving Amount', calculatedSavingAmount);
+    console.log('Updated Saving Amount', updatedSavingAmount);
+
   };
   
   const calculateMonthsAndWeeks = (startDate, goalDate) => {
@@ -342,6 +354,7 @@ const DateSelectionScreen = ({ navigation, route }) => {
               selectedWeek={goalDuration} // Sync with parent state
               onScrollWeekChange={handleScrollWeekChange} // Immediate updates for goalDate, goalDuration
               onWeekChange={handleWeekChange} // Finalize updates after scrolling stops
+              lockScroll={lockScroll}
               setScrollLock={setScrollLock} // Pass scrollLock setter
             />
           
@@ -353,7 +366,7 @@ const DateSelectionScreen = ({ navigation, route }) => {
         <View style={styles.formContainer}>
           <View style={styles.rowGroup}>
             <View style={styles.halfInput}>
-              <Text style={styles.label}>Saving amount</Text>
+              <Text style={styles.label}>Saving amounts</Text>
               <TextInput
                 style={styles.input}
                 value={`$${Math.round(isManualInput ? updatedSavingAmount : calculatedSavingAmount) || 0}`}
@@ -431,9 +444,19 @@ const DateSelectionScreen = ({ navigation, route }) => {
           <Text style={styles.skipButtonText}>Back</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.nextButton} onPress={() => navigation.navigate('Summary')}>
+        <TouchableOpacity
+          style={styles.nextButton}
+          onPress={() => navigation.navigate('NotificationsOnboarding', {
+            goalAmount: savingsGoal,
+            savingAmount: updatedSavingAmount,
+            currentlySaved: currentlySaved,
+            startDate: startDate,
+            frequency: savingRecurrence,
+          })}
+        >
           <Text style={styles.buttonText}>Next</Text>
         </TouchableOpacity>
+
       </View>
     </View>
   );
