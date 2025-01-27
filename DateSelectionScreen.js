@@ -433,6 +433,7 @@ const DateSelectionScreen = ({ navigation, route }) => {
           style={styles.skipButton}
           onPress={() => {
             navigation.navigate('SavingsGoal', {
+              fromBackButton: true,
               goalAmount: savingsGoal,
               savingAmount: updatedSavingAmount,
               currentlySaved: currentlySaved,
@@ -443,6 +444,7 @@ const DateSelectionScreen = ({ navigation, route }) => {
         >
           <Text style={styles.skipButtonText}>Back</Text>
         </TouchableOpacity>
+
 
         <TouchableOpacity
           style={styles.nextButton}

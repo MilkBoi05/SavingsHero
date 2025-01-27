@@ -152,6 +152,7 @@ const SavingsGoalScreen = ({ navigation, route }) => {
 
   const [textColor, setTextColor] = useState('black');
 
+  
 
 
   if (!fontsLoaded) {

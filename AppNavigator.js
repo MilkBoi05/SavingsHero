@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
+import { createStackNavigator, CardStyleInterpolators  } from '@react-navigation/stack';
 
 import SavingsGoalScreen from './SavingsGoalScreen';
 import DateSelectionScreen from './DateSelectionScreen';
@@ -11,7 +11,15 @@ const Stack = createStackNavigator();
 const AppNavigator = () => {
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="SavingsGoal">
+      <Stack.Navigator screenOptions={({ route }) => {
+        const isBackAction = route.params?.fromBackButton || false;
+
+        return {
+          headerShown: false,
+          gestureDirection: isBackAction ? 'horizontal-inverted' : 'horizontal', // Slide left if back
+          cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS, // iOS-like animation
+        };
+      }}>
         <Stack.Screen
           name="SavingsGoal"
           component={SavingsGoalScreen}

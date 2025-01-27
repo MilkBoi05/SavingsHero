@@ -326,6 +326,49 @@ const styles = StyleSheet.create({
   removeButtonText: {
     fontSize: 24
   },
+  NotificationHeading: {
+    fontFamily: 'Lato_700Bold',
+    fontSize:24,
+    color: '#434343',
+    marginTop: 48,
+    marginBottom: 24
+
+  },
+  optionStack: {
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderRadius: 8,
+    padding: 0,
+    marginBottom: 24,
+    fontSize: 16,
+    placeholderTextColor: '#8E9AA5',
+    color: "#434343"
+  },
+  optionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    gap: 12
+  },
+  optionText: {
+    fontSize: 16,
+    color: '#333',
+    borderRadius: 8,
+    fontSize: 16,
+    placeholderTextColor: '#8E9AA5',
+    color: "#434343"
+  },
+  optionBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
+    borderRadius: 8,
+    fontSize: 16,
+    placeholderTextColor: '#8E9AA5',
+    color: "#434343"
+  },
+  optionWrapper: {
+    width: '100%',
+  },
 });
 
 export default styles;
