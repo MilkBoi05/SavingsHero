@@ -207,10 +207,6 @@ const DateSelectionScreen = ({ navigation, route }) => {
     }
   };
   
-  
-  
-  
-  
   useEffect(() => {
     if (!isManualInput && goalDuration > 0) {
       const remainingAmount = savingsGoal - currentlySaved;
@@ -225,13 +221,6 @@ const DateSelectionScreen = ({ navigation, route }) => {
 
     }
   }, [goalDuration, isManualInput, savingsGoal, currentlySaved]);
-  
-  
-  
-  
-  
-  
-  
   
   const handleSavingAmountChange = (text) => {
     const inputAmount = parseFloat(text.replace(/[^0-9.]/g, '')) || 0;
@@ -335,6 +324,12 @@ const DateSelectionScreen = ({ navigation, route }) => {
   const removeImage = (index) => {
     setUploadedImages((prevImages) => prevImages.filter((_, i) => i !== index));
   };
+
+  const remainingAmount = savingsGoal - currentlySaved; // Calculate remaining savings
+  const weeksUntilGoal = remainingAmount > 0 ? Math.ceil(remainingAmount / savingAmount) : 0;
+
+
+console.log('Goal date:', goalDate);
 
   return (
     <View style={{ flex: 1 }}>
@@ -454,6 +449,8 @@ const DateSelectionScreen = ({ navigation, route }) => {
             currentlySaved: currentlySaved,
             startDate: startDate,
             frequency: savingRecurrence,
+            weeksUntilGoal: weeksUntilGoal,
+            goalDate: goalDate
           })}
         >
           <Text style={styles.buttonText}>Next</Text>

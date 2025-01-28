@@ -22,6 +22,8 @@ const NotificationsOnboarding = ({ navigation, route }) => {
     'Savings advice',
   ];
 
+  const { goalDuration, weeksUntilGoal, savingsGoal, currentlySaved, goalDate } = route.params;
+
   const toggleOption = (option) => {
     if (option === 'Select all') {
       // If "Select all" is toggled, either select all options or deselect all
@@ -55,10 +57,23 @@ const NotificationsOnboarding = ({ navigation, route }) => {
     }
   };
 
+  const handleNext = () => {
+    navigation.navigate('Dashboard', {
+      savingsGoal: route.params.savingsGoal,
+      currentlySaved: route.params.currentlySaved,
+      goalDate: route.params.goalDate,
+      goalDuration: route.params.goalDuration,
+      weeksUntilGoal
+    });
+  };
+
   // Ensure fonts are loaded before rendering
   if (!fontsLoaded) {
     return null; // Render nothing or a loading spinner
   }
+
+
+console.log('Goal date:', goalDate);
 
   return (
     <>
@@ -106,12 +121,14 @@ const NotificationsOnboarding = ({ navigation, route }) => {
             savingAmount: route.params?.savingAmount || 0,
             frequency: route.params?.frequency || 'weekly',
             currentlySaved: route.params?.currentlySaved || 0,
+            weeksUntilGoal: route.params.weeksUntilGoal,
+            dateGoal: route.params.dateGoal
           });
         }}
       >
         <Text style={styles.skipButtonText}>Back</Text>
        </TouchableOpacity>
-        <TouchableOpacity style={styles.nextButton}>
+        <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
           <Text style={styles.buttonText}>Create goal</Text>
         </TouchableOpacity>
       </View>

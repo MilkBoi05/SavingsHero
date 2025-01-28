@@ -5,6 +5,7 @@ import { createStackNavigator, CardStyleInterpolators  } from '@react-navigation
 import SavingsGoalScreen from './SavingsGoalScreen';
 import DateSelectionScreen from './DateSelectionScreen';
 import NotificationsOnboarding from './NotificationsOnboarding';
+import Dashboard from './Dashboard';
 
 const Stack = createStackNavigator();
 
@@ -33,6 +34,11 @@ const AppNavigator = () => {
         <Stack.Screen
           name="NotificationsOnboarding"
           component={NotificationsOnboarding}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Dashboard"
+          component={Dashboard} // Add Dashboard as a screen
           options={{ headerShown: false }}
         />
       </Stack.Navigator>
