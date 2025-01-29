@@ -18,7 +18,10 @@ const Dashboard = ({ route, navigation }) => {
   const [goalData, setGoalData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedTab, setSelectedTab] = useState("Upcoming");
-  const payments = goalData?.payments || []; 
+  const payments = goalData?.payments || [];
+  const [isScrolling, setIsScrolling] = useState(false);
+
+
 
   console.log("🚀 Goal Data at Render:", goalData);
   console.log("📜 All Payments in Goal Data:", goalData?.payments || "No payments found");
@@ -86,28 +89,43 @@ const Dashboard = ({ route, navigation }) => {
   
 
   const screenHeight = Dimensions.get('window').height;
-  const trayHeight = screenHeight * 0.5;
-  const trayOffset = screenHeight - trayHeight * 0.2;
-  const animatedValue = useRef(new Animated.Value(trayOffset)).current;
-
+  const collapsedPosition = screenHeight - 200; // ✅ Tray sits 300px from the bottom
+  const expandedPosition = screenHeight - 700; // ✅ Tray moves up to 700px from the bottom
+  
+  const animatedValue = useRef(new Animated.Value(collapsedPosition)).current;
+  const [isTrayExpanded, setIsTrayExpanded] = useState(false);
+  
   const panResponder = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (e, gestureState) => {
+        if (isScrolling) return false; // ✅ Completely block tray movement when scrolling
+        if (Math.abs(gestureState.dx) > Math.abs(gestureState.dy)) return false; // ✅ Ignore horizontal swipes
+        return Math.abs(gestureState.dy) > 10; // ✅ Only trigger if significant vertical movement
+      },
+      onStartShouldSetPanResponder: () => !isScrolling, // ✅ Prevents pan start when scrolling
       onPanResponderMove: (e, gestureState) => {
-        const newValue = animatedValue._value - gestureState.dy;
-        if (newValue >= trayOffset - trayHeight && newValue <= trayOffset) {
-          animatedValue.setValue(newValue);
+        if (!isScrolling) {
+          const newValue = animatedValue._value - gestureState.dy;
+          if (newValue >= expandedPosition && newValue <= collapsedPosition) {
+            animatedValue.setValue(newValue);
+          }
         }
       },
       onPanResponderRelease: (e, gestureState) => {
-        if (gestureState.dy > 50) {
-          Animated.spring(animatedValue, { toValue: trayOffset, useNativeDriver: false }).start();
-        } else if (gestureState.dy < -50) {
-          Animated.spring(animatedValue, { toValue: trayOffset - trayHeight, useNativeDriver: false }).start();
+        if (!isScrolling) {
+          if (gestureState.dy > 50) {
+            Animated.spring(animatedValue, { toValue: collapsedPosition, useNativeDriver: false }).start();
+            setIsTrayExpanded(false);
+          } else if (gestureState.dy < -50) {
+            Animated.spring(animatedValue, { toValue: expandedPosition, useNativeDriver: false }).start();
+            setIsTrayExpanded(true);
+          }
         }
       },
     })
   ).current;
+  
+
 
   if (isLoading || !fontsLoaded) {
     console.log("⏳ Waiting for data to load...");
@@ -142,7 +160,7 @@ const Dashboard = ({ route, navigation }) => {
         <Text style={styles.resetButtonText}>Reset Goal</Text>
       </TouchableOpacity> 
       <Animated.View {...panResponder.panHandlers} style={[styles.tray, { transform: [{ translateY: animatedValue }] }]}>
-    
+      <View style={styles.trayHandle} />
     {/* Payments Header with Amount Left */}
     <View style={styles.trayHeader}>
       <Text style={styles.trayHeading}>Payments</Text>
@@ -170,7 +188,17 @@ const Dashboard = ({ route, navigation }) => {
     </View>
 
     {/* Payment List */}
-    <ScrollView style={styles.paymentList}>
+    <ScrollView 
+  contentContainerStyle={{ flexGrow: 1, paddingBottom: 20 }} 
+  style={styles.paymentList} 
+  nestedScrollEnabled={true} 
+  scrollEventThrottle={16} 
+  onScrollBeginDrag={() => setIsScrolling(true)} // ✅ Disables tray movement when scrolling starts
+  onMomentumScrollEnd={() => setTimeout(() => setIsScrolling(false), 100)} // ✅ Re-enables tray after scrolling stops
+  onScrollEndDrag={() => setTimeout(() => setIsScrolling(false), 100)} // ✅ Ensures smooth transition
+>
+
+
       {goalData?.payments?.length > 0 ? (
         goalData.payments.map((payment, index) => (
           <View key={index}>

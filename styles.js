@@ -379,20 +379,22 @@ const styles = StyleSheet.create({
   },
   tray: {
     position: 'absolute',
-    bottom: 0,
     left: 0,
     right: 0,
-    height: 300,
-    backgroundColor: '#f7f7f7',
+    backgroundColor: '#fff',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -3 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 5,
     padding: 16,
-  },
+    height: 'auto', // ✅ Adjusts based on content
+    minHeight: 200, // ✅ Prevents it from being too small
+    maxHeight: 800, // ✅ Expands when swiped up
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -3 }, // ✅ Makes the shadow appear above
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 10, 
+  },  
   trayHandle: {
     width: 40,
     height: 5,
@@ -505,7 +507,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-  }
+  },
+  paymentList: {
+    flexGrow: 1, // ✅ Allows content to expand
+    maxHeight: '100%', // ✅ Ensures full height usage
+    overflow: 'scroll', // ✅ Prevents content from being cut off
+  },
+  
+  
+  
 });
 
 export default styles;
