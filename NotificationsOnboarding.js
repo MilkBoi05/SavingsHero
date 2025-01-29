@@ -5,6 +5,8 @@ import { RussoOne_400Regular } from '@expo-google-fonts/russo-one';
 import { Lato_700Bold, Lato_400Regular } from '@expo-google-fonts/lato';
 import { MaterialIcons } from '@expo/vector-icons';
 import styles from './styles';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 const NotificationsOnboarding = ({ navigation, route }) => {
   const [fontsLoaded] = useFonts({
@@ -57,15 +59,30 @@ const NotificationsOnboarding = ({ navigation, route }) => {
     }
   };
 
-  const handleNext = () => {
-    navigation.navigate('Dashboard', {
-      savingsGoal: route.params.savingsGoal,
-      currentlySaved: route.params.currentlySaved,
-      goalDate: route.params.goalDate,
-      goalDuration: route.params.goalDuration,
-      weeksUntilGoal
-    });
+  const handleNext = async () => {
+    const payments = route.params?.payments || []; // ✅ Ensure payments is defined
+  
+    const goalData = {
+      savingsGoal,
+      currentlySaved,
+      goalDate,
+      weeksUntilGoal,
+      payments, // ✅ Now payments will not be undefined
+    };
+  
+    try {
+      console.log("📝 Saving goal data with payments:", goalData);
+      await AsyncStorage.setItem('savingsGoal', JSON.stringify(goalData));
+  
+      console.log("✅ Goal saved successfully! Navigating to Dashboard...");
+      navigation.replace('Dashboard', goalData); // ✅ Navigate to Dashboard after saving
+    } catch (error) {
+      console.error("❌ Error saving goal:", error);
+    }
   };
+  
+  
+
 
   // Ensure fonts are loaded before rendering
   if (!fontsLoaded) {

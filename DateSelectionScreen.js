@@ -75,17 +75,20 @@ const DateSelectionScreen = ({ navigation, route }) => {
     const newSavingAmount =
       selectedWeeks > 0 ? Math.ceil(remainingAmount / selectedWeeks) : savingAmount;
 
-    const formattedGoalDate = new Intl.DateTimeFormat('en-GB', {
-       day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    }).format(start); // Format to "10 July 2025"
+      const formattedGoalDate = new Intl.DateTimeFormat('en-US', {
+        month: 'long',  // ✅ Full month name (e.g., "July")
+        day: 'numeric', // ✅ Numeric day (e.g., "10")
+        year: 'numeric' // ✅ Full year (e.g., "2025")
+      }).format(start);
+       // Format to "10 July 2025"
 
     return {
       goalDate: formattedGoalDate,
       savingAmount: updatedSavingAmount,
     }; 
   };
+  
+  
 
   useEffect(() => {
     const calculateInitialDetails = () => {
@@ -108,7 +111,6 @@ const DateSelectionScreen = ({ navigation, route }) => {
 
       console.log('goalDuration:', goalDuration);
 
-  
       // Use a timeout to force re-render and ensure FlatList has been rendered
       setTimeout(() => {
         if (carouselRef.current) {
@@ -119,7 +121,6 @@ const DateSelectionScreen = ({ navigation, route }) => {
   
     calculateInitialDetails();
   }, [savingsGoal, savingAmount, frequency, currentlySaved, savingRecurrence]);
-  
 
   const handleScrollWeekChange = (() => {
 
@@ -139,10 +140,10 @@ const DateSelectionScreen = ({ navigation, route }) => {
       const newGoalDate = new Date(startDate);
       newGoalDate.setDate(newGoalDate.getDate() + week * 7);
       setGoalDate(
-        new Intl.DateTimeFormat('en-GB', {
-          day: 'numeric',
-          month: 'long',
-          year: 'numeric',
+        new Intl.DateTimeFormat('en-US', {
+          month: 'long',  // ✅ Full month name (e.g., "July")
+          day: 'numeric', // ✅ Numeric day (e.g., "10")
+          year: 'numeric' // ✅ Full year (e.g., "2025")
         }).format(newGoalDate)
       );
   
@@ -189,10 +190,10 @@ const DateSelectionScreen = ({ navigation, route }) => {
     const newGoalDate = new Date(startDate);
     newGoalDate.setDate(newGoalDate.getDate() + week * 7);
     setGoalDate(
-      new Intl.DateTimeFormat('en-GB', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
+      new Intl.DateTimeFormat('en-US', {
+        month: 'long',  // ✅ Full month name (e.g., "July")
+        day: 'numeric', // ✅ Numeric day (e.g., "10")
+        year: 'numeric' // ✅ Full year (e.g., "2025")
       }).format(newGoalDate)
     );
   
@@ -250,10 +251,10 @@ const DateSelectionScreen = ({ navigation, route }) => {
         const newGoalDate = new Date(startDate);
         newGoalDate.setDate(newGoalDate.getDate() + calculatedWeeks * 7);
         setGoalDate(
-          new Intl.DateTimeFormat('en-GB', {
-            day: 'numeric',
-            month: 'long',
-            year: 'numeric',
+          new Intl.DateTimeFormat('en-US', {
+            month: 'long',  // ✅ Full month name (e.g., "July")
+            day: 'numeric', // ✅ Numeric day (e.g., "10")
+            year: 'numeric' // ✅ Full year (e.g., "2025")
           }).format(newGoalDate)
         );
   
@@ -328,6 +329,37 @@ const DateSelectionScreen = ({ navigation, route }) => {
   const remainingAmount = savingsGoal - currentlySaved; // Calculate remaining savings
   const weeksUntilGoal = remainingAmount > 0 ? Math.ceil(remainingAmount / savingAmount) : 0;
 
+  const generatePayments = (startDate, savingAmount, frequency, weeksUntilGoal) => {
+    const payments = [];
+    let currentDate = new Date(startDate);
+  
+    for (let i = 0; i < weeksUntilGoal; i++) {
+      payments.push({
+        date: new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', year: 'numeric' }).format(currentDate),
+        amount: savingAmount,
+        totalAfter: currentlySaved + (savingAmount * (i + 1)), // Calculate total after payment
+        type: "Deposit",  // Assume deposits only for now
+        method: "Automatic", // Assume automatic for now
+      });
+  
+      // Move date based on saving frequency
+      currentDate.setDate(currentDate.getDate() + (frequency === "weekly" ? 7 : frequency === "fortnightly" ? 14 : 30));
+    }
+  
+    return payments;
+  };
+
+  const handleNext = () => {
+    const payments = generatePayments(startDate, updatedSavingAmount, savingRecurrence, weeksUntilGoal);
+  
+    navigation.navigate('NotificationsOnboarding', {
+      savingsGoal,
+      currentlySaved,
+      goalDate,
+      weeksUntilGoal,
+      payments, // ✅ Pass generated payments
+    });
+  };
 
 console.log('Goal date:', goalDate);
 
@@ -443,15 +475,7 @@ console.log('Goal date:', goalDate);
 
         <TouchableOpacity
           style={styles.nextButton}
-          onPress={() => navigation.navigate('NotificationsOnboarding', {
-            goalAmount: savingsGoal,
-            savingAmount: updatedSavingAmount,
-            currentlySaved: currentlySaved,
-            startDate: startDate,
-            frequency: savingRecurrence,
-            weeksUntilGoal: weeksUntilGoal,
-            goalDate: goalDate
-          })}
+          onPress={handleNext}
         >
           <Text style={styles.buttonText}>Next</Text>
         </TouchableOpacity>

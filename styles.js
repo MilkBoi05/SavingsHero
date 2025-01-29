@@ -30,6 +30,14 @@ const styles = StyleSheet.create({
     gap:24,
     paddingBottom: 24
   },
+  dashboardHeader: {
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    marginBottom: 8, 
+    gap: 8,
+    marginTop: 16,
+    paddingLeft: 16
+  },
   goalDateContainer: {
      alignItems: 'center',
      gap: 12
@@ -369,6 +377,135 @@ const styles = StyleSheet.create({
   optionWrapper: {
     width: '100%',
   },
+  tray: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 300,
+    backgroundColor: '#f7f7f7',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 5,
+    padding: 16,
+  },
+  trayHandle: {
+    width: 40,
+    height: 5,
+    backgroundColor: '#ccc',
+    borderRadius: 2.5,
+    alignSelf: 'center',
+    marginBottom: 8,
+  },
+  trayHeading: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  paymentInfo: {
+    fontSize: 14,
+    marginBottom: 4,
+  },
+  goalTextWeeks: {
+    paddingLeft: 16,
+    fontFamily: 'Lato_700Bold',
+    fontSize: 28
+  },
+  goalText: {
+    paddingLeft: 16,
+    fontFamily: 'Lato_700Bold',
+    fontSize: 20
+  },
+  goalTextDates: {
+    paddingLeft: 16,
+    fontFamily: 'Lato_700Bold',
+    fontSize: 20
+  },amountLeft: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#000', 
+  },
+  
+  totalAmount: {
+    color: '#888',  // Lighter text for the total amount
+  },
+  
+  /* Tabs */
+  tabContainer: {
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
+    marginBottom: 10,
+  },
+  
+  tab: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  
+  activeTab: {
+    borderBottomWidth: 3,
+    borderBottomColor: '#A23DEF',
+  },
+  
+  tabText: {
+    fontSize: 16,
+    color: '#888',
+  },
+  
+  activeTabText: {
+    color: '#A23DEF',
+    fontWeight: 'bold',
+  },
+  
+  paymentList: {
+    maxHeight: 200,
+  },
+  
+  paymentDate: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#666',
+    marginTop: 10,
+  },
+  
+  paymentCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 10,
+    marginVertical: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  
+  paymentIcon: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginRight: 10,
+  },
+  
+  depositIcon: {
+    color: '#1FA849',
+  },
+  
+  withdrawalIcon: {
+    color: '#FF5733',
+  },
+  trayHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  }
 });
 
 export default styles;
