@@ -378,17 +378,17 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   tray: {
+    backgroundColor: '#fff',
     position: 'absolute',
     left: 0,
     right: 0,
-    backgroundColor: '#fff',
+    backgroundColor: '#F2F5F7',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 16,
     height: 'auto', // ✅ Adjusts based on content
     minHeight: 200, // ✅ Prevents it from being too small
     maxHeight: 800, // ✅ Expands when swiped up
-    overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -3 }, // ✅ Makes the shadow appear above
     shadowOpacity: 0.2,
@@ -479,9 +479,12 @@ const styles = StyleSheet.create({
   paymentCard: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
     borderRadius: 8,
-    padding: 10,
+    padding: 12,
     marginVertical: 5,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -493,11 +496,34 @@ const styles = StyleSheet.create({
   paymentIcon: {
     fontSize: 24,
     fontWeight: 'bold',
-    marginRight: 10,
+    paddingHorizontal: 12, // Added padding
   },
-  
   depositIcon: {
     color: '#1FA849',
+  },
+  paymentDetails: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingLeft: 10, // Ensures spacing from the icon
+  },
+  paymentAmount: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  paymentTotal: {
+    fontSize: 14,
+    color: '#666',
+  },
+  paymentTypeContainer: {
+    alignItems: 'flex-end', // Ensures right alignment
+  },
+  paymentType: {
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  paymentMethod: {
+    fontSize: 12,
+    color: '#666',
   },
   
   withdrawalIcon: {
@@ -513,6 +539,17 @@ const styles = StyleSheet.create({
     maxHeight: '100%', // ✅ Ensures full height usage
     overflow: 'scroll', // ✅ Prevents content from being cut off
   },
+  openButton: { backgroundColor: '#6200EE', padding: 10, borderRadius: 5 },
+  closeButton: { backgroundColor: '#FF4444', padding: 10, borderRadius: 5, marginTop: 10 },
+  sheetContainer: { flex: 1, alignItems: 'center', padding: 20 },
+  sheetTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 10 },
+  sheetContainer: {
+  flex: 1,
+  padding: 20,
+  alignItems: 'center',
+  backgroundColor: '#FFF',
+},
+
   
   
   

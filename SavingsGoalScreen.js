@@ -88,9 +88,18 @@ const SavingsGoalScreen = ({ navigation, route }) => {
     // Add commas every three digits
     const formattedText = sanitizedText.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   
-    setValues((prevValues) => ({
-      ...prevValues,
+    const newValues = {
+      ...values,
       [field]: sanitizedText ? `$${formattedText}` : '$', // Always keep the "$" symbol
+    };
+    
+    setValues(newValues);
+  
+    // Validate fields immediately and update errors
+    const validationErrors = validateFields(newValues);
+    setErrors(prevErrors => ({
+      ...prevErrors,
+      [field]: validationErrors[field] || '' // Clear error if field is valid
     }));
   };
   
@@ -162,6 +171,7 @@ const SavingsGoalScreen = ({ navigation, route }) => {
       </View>
     );
   }
+
 
   return (
 
@@ -368,7 +378,9 @@ const SavingsGoalScreen = ({ navigation, route }) => {
             setErrors(validationErrors); // Display validation errors
             return; // Prevent navigation
           }
-      
+            
+          console.log('Contribution amount 1', values.savingAmount)  
+
           // If no errors, navigate to the next screen
           setErrors({}); // Clear any previous errors
           navigation.navigate('DateSelection', {
@@ -378,6 +390,7 @@ const SavingsGoalScreen = ({ navigation, route }) => {
             frequency: savingRecurrence,
             currentlySaved: parseFloat(values.currentlySaved.replace(/[^0-9.]/g, '')) || 0,
           });
+          
         }}
         >
         <Text style={styles.buttonText}>Next</Text>
@@ -388,6 +401,7 @@ const SavingsGoalScreen = ({ navigation, route }) => {
     
   );
 };
+
 
 export default SavingsGoalScreen;
 

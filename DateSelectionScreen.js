@@ -35,14 +35,29 @@ const DateSelectionScreen = ({ navigation, route }) => {
   const [updatedSavingAmount, setUpdatedSavingAmount] = useState(savingAmount);
   const [motivation, setMotivation] = useState('');
   const [savingRecurrence, setSavingRecurrence] = useState(frequency);
-  const weeks = Array.from({ length: 260 }, (_, i) => i + 1); // Weeks from 1 to 260
+  const recurrenceJustChanged = useRef(false);
+  // const weeks = Array.from({ length: 52000 }, (_, i) => i + 1); // Weeks from 1 to 260
   const debounceTimer = useRef(null); // Declare this at the top of your component
   const [isManualInput, setIsManualInput] = useState(false); // Track if the input is manual
   const [calculatedSavingAmount, setCalculatedSavingAmount] = useState(savingAmount); // New state
   const [lockScroll, setScrollLock] = useState(false);
   const [uploadedImages, setUploadedImages] = useState([]);
 
-
+  const generateDataArray = (recurrence) => {
+    switch (recurrence) {
+      case "weekly":
+        return Array.from({ length: 52000 }, (_, i) => i + 1); // 260 weeks
+      case "fortnightly":
+        return Array.from({ length: 52000 }, (_, i) => i + 1); // 130 fortnights
+      case "monthly":
+        return Array.from({ length: 52000 }, (_, i) => i + 1); // 60 months
+      default:
+        return Array.from({ length: 52000 }, (_, i) => i + 1);
+    }
+  };
+  
+  const [weeks, setWeeks] = useState(generateDataArray(savingRecurrence));
+  
 
   const frequencyMap = {
     weekly: 1,
@@ -50,20 +65,57 @@ const DateSelectionScreen = ({ navigation, route }) => {
     monthly: 4.33, // Approx weeks in a month
   };
 
-  const formatDuration = (weeks) => {
-  
-    if (weeks < 16) {
-      // Return the duration in weeks if under 16 weeks
-      return `${weeks} week${weeks === 1 ? '' : 's'}`;
+  const formatDuration = (periods) => {
+    // Convert periods to weeks based on recurrence
+    const weeksPerPeriod = {
+      weekly: 1,
+      fortnightly: 2,
+      monthly: 4.33
+    };
+    const totalWeeks = periods * (weeksPerPeriod[savingRecurrence] || 1);
+
+    if (savingRecurrence === 'monthly' && periods < 12) {
+      // For monthly, show months directly if less than a year
+      return `${periods} month${periods === 1 ? '' : 's'}`;
+    } else if (savingRecurrence === 'fortnightly' && periods < 26) {
+      // For fortnightly, show count if less than a year
+      return `${periods} fortnight${periods === 1 ? '' : 's'}`;
+    } else if (totalWeeks < 16) {
+      // For weekly or small durations, show weeks
+      return `${Math.round(totalWeeks)} week${totalWeeks === 1 ? '' : 's'}`;
     }
-  
-    // Calculate months and remaining weeks for 16 weeks or more
-    const months = Math.floor(weeks / 4.33); // Approximate weeks in a month
-    const remainingWeeks = Math.round(weeks % 4.33); // Remaining weeks
-  
-    return `${months} month${months === 1 ? '' : 's'}${
-      remainingWeeks > 0 ? `, ${remainingWeeks} week${remainingWeeks > 1 ? 's' : ''}` : ''
-    }`;
+
+    // Calculate years and remaining time
+    const years = Math.floor(totalWeeks / 52);
+    const remainingWeeks = totalWeeks % 52;
+    const months = Math.floor(remainingWeeks / 4.33);
+    const finalWeeks = Math.round(remainingWeeks % 4.33);
+
+    let duration = '';
+
+    if (years > 0) {
+      duration = `${years} year${years === 1 ? '' : 's'}`;
+      
+      if (months > 0) {
+        duration += `, ${months} month${months === 1 ? '' : 's'}`;
+      }
+      
+      if (finalWeeks > 0) {
+        duration += `, ${finalWeeks} week${finalWeeks === 1 ? '' : 's'}`;
+      }
+    } else {
+      if (months > 0) {
+        duration = `${months} month${months === 1 ? '' : 's'}`;
+        
+        if (finalWeeks > 0) {
+          duration += `, ${finalWeeks} week${finalWeeks === 1 ? '' : 's'}`;
+        }
+      } else if (finalWeeks > 0) {
+        duration = `${finalWeeks} week${finalWeeks === 1 ? '' : 's'}`;
+      }
+    }
+
+    return duration;
   };
 
   
@@ -84,8 +136,9 @@ const DateSelectionScreen = ({ navigation, route }) => {
 
     return {
       goalDate: formattedGoalDate,
-      savingAmount: updatedSavingAmount,
+      savingAmount: newSavingAmount
     }; 
+
   };
   
   
@@ -101,177 +154,168 @@ const DateSelectionScreen = ({ navigation, route }) => {
         return;
       }
   
-      const intervalWeeks = frequencyMap[savingRecurrence] || 1; // Default to weekly
-      const weeksRequired = Math.ceil(remainingAmount / (savingAmount * intervalWeeks));
-      const { goalDate } = calculateGoalDetails(weeksRequired);
+      const intervalWeeks = frequencyMap[savingRecurrence] || 1;
+      // Calculate required periods based on frequency
+      const periodsRequired = Math.ceil(remainingAmount / (updatedSavingAmount));
+      // Convert periods to total weeks for date calculation
+      const totalWeeks = periodsRequired * intervalWeeks;
+      const { goalDate } = calculateGoalDetails(totalWeeks);
   
-      setGoalDuration(weeksRequired); // Set initial weeks
-      setScrollingWeek(weeksRequired); // Align scrolling week
-      setGoalDate(goalDate); // Set goal date
-
-      console.log('goalDuration:', goalDuration);
-
-      // Use a timeout to force re-render and ensure FlatList has been rendered
+      setGoalDuration(periodsRequired); // Set number of periods (weeks/fortnights/months)
+      setScrollingWeek(periodsRequired); // Align scrolling with periods
+      setGoalDate(goalDate);
+      
       setTimeout(() => {
         if (carouselRef.current) {
-          carouselRef.current.scrollToWeek(weeksRequired); // Scroll to the correct week
+          carouselRef.current.scrollToWeek(periodsRequired);
         }
-      }, 100); // Delay slightly to allow the FlatList to render
+      }, 100);
     };
   
     calculateInitialDetails();
   }, [savingsGoal, savingAmount, frequency, currentlySaved, savingRecurrence]);
 
-  const handleScrollWeekChange = (() => {
+  const handleSavingRecurrenceChange = (value) => {
+    console.log('Recurrence changing to:', value);
+    recurrenceJustChanged.current = true;
+    setSavingRecurrence(value);
+    
+    setWeeks(generateDataArray(value)); // ✅ Update the weeks array dynamically
+  
+    const remainingAmount = savingsGoal - currentlySaved;
+    const oldIntervalFactor = frequencyMap[savingRecurrence]; // Old frequency (1 for weekly, 2 for fortnightly, etc.)
+    const newIntervalFactor = frequencyMap[value]; // New frequency
+  
+    // ✅ Keep the same number of contributions, but adjust total duration in real time
+    let totalPeriods = goalDuration * newIntervalFactor;
+    let activeCarousel = goalDuration; // Maintain the number of savings contributions (40 weeks → 40 fortnights)
+    let totalDaysNeeded = totalPeriods * (newIntervalFactor * 7); // Convert periods into total days
+  
+    setGoalDuration(totalPeriods);
+    setScrollingWeek(activeCarousel);
+    console.log('activeCarousel', activeCarousel);
+  
+    // ✅ Correctly update goal date based on new total duration
+    const newGoalDate = new Date(startDate);
+    newGoalDate.setDate(newGoalDate.getDate() + totalDaysNeeded);
+    setGoalDate(
+      new Intl.DateTimeFormat('en-US', {
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric'
+      }).format(newGoalDate)
+    );
+  
+    if (carouselRef.current) {
+      carouselRef.current.scrollToWeek(activeCarousel); // Scroll using the same period count
+    }
+  
+    setTimeout(() => {
+      recurrenceJustChanged.current = false;
+    }, 600);
+    
+    console.log('activeCarousel 2', activeCarousel);
+  };
+  
+  
+  
+  
+  
 
-    const debounceTimer = useRef(null);
-  
-    return (week) => {
-      if (lockScroll) return;
+  const calculateAndSetGoalDate = (week) => {
+    const newGoalDate = new Date(startDate);
+    
+    // Calculate the correct interval based on recurrence type
+    if (savingRecurrence === 'monthly') {
+        // For monthly, add months directly
+        newGoalDate.setMonth(newGoalDate.getMonth() + week);
+    } else {
+        // For weekly and fortnightly, calculate days
+        const intervalFactor = frequencyMap[savingRecurrence];
+        const totalDays = week * intervalFactor * 7;
+        newGoalDate.setDate(newGoalDate.getDate() + totalDays);
+    }
 
-      if (isManualInput) {
-        return; // Ignore updates if scrollLock is active
-      }
-  
-      // Immediate updates for goalDuration, goalDate, and scrollingWeek
-      setGoalDuration(week);
-      setScrollingWeek(week);
-  
-      const newGoalDate = new Date(startDate);
-      newGoalDate.setDate(newGoalDate.getDate() + week * 7);
-      setGoalDate(
+    // Set the goal date immediately with the correct calculation
+    setGoalDate(
         new Intl.DateTimeFormat('en-US', {
-          month: 'long',  // ✅ Full month name (e.g., "July")
-          day: 'numeric', // ✅ Numeric day (e.g., "10")
-          year: 'numeric' // ✅ Full year (e.g., "2025")
+            month: 'long',
+            day: 'numeric',
+            year: 'numeric'
         }).format(newGoalDate)
-      );
-  
-      const { months, weeks } = calculateMonthsAndWeeks(startDate, newGoalDate);
-       setDisplayDuration(`${months} months${weeks > 0 ? `, ${weeks}` : ''}`);
+    );
 
-      // Clear any ongoing debounce timer
-      if (debounceTimer.current) {
-        clearTimeout(debounceTimer.current);
-      }
-  
-      console.log('Manual Input Active SCroll Week:', isManualInput);
+    const remainingAmount = savingsGoal - currentlySaved;
+    if (remainingAmount > 0 && week > 0) {
+        const calculatedSavingAmount = Math.ceil(remainingAmount / week);
+        setUpdatedSavingAmount(calculatedSavingAmount);
+    }
+  };
 
-      // Debounced savings amount update
-      debounceTimer.current = setTimeout(() => {
-        if (!isManualInput) { // Avoid overwriting manually entered values
-          const remainingAmount = savingsGoal - currentlySaved;
+  const handleScrollWeekChange = (week) => {
+
+    const shouldSkipUpdate = lockScroll || isManualInput || recurrenceJustChanged.current;
+    if (shouldSkipUpdate) {
+        console.log('Skipping savings update - manual input or recurrence just changed');
+        return;
+    }
+
+    setGoalDuration(week);
+    setScrollingWeek(week);
+
+
+    // Calculate and set the goal date
+    calculateAndSetGoalDate(week);
+  };
   
-          if (remainingAmount > 0 && week > 0) {
-            const calculatedSavingAmount = remainingAmount / week;
-            setCalculatedSavingAmount(calculatedSavingAmount); // Update calculated value
-            setUpdatedSavingAmount(calculatedSavingAmount); // Update savings amount after debounce
-          }
-        }
-      }, 500); // 500ms delay
-    };
-  })();
   
 
   
   const handleWeekChange = (week) => {
-    // Ignore updates if scrollLock is active
-    if (lockScroll) return; 
+    
+    if (lockScroll || isManualInput || recurrenceJustChanged.current) return;
 
-    if (isManualInput) {
-      return;
-    }
-  
-    // Update goalDuration and scrollingWeek immediately
     setGoalDuration(week);
     setScrollingWeek(week);
-  
-    // Update goal date immediately
-    const newGoalDate = new Date(startDate);
-    newGoalDate.setDate(newGoalDate.getDate() + week * 7);
-    setGoalDate(
-      new Intl.DateTimeFormat('en-US', {
-        month: 'long',  // ✅ Full month name (e.g., "July")
-        day: 'numeric', // ✅ Numeric day (e.g., "10")
-        year: 'numeric' // ✅ Full year (e.g., "2025")
-      }).format(newGoalDate)
-    );
-  
-    // Only update savings amount if manual input is not active
-    if (!isManualInput) {
-      const remainingAmount = savingsGoal - currentlySaved;
-  
-      if (remainingAmount > 0 && week > 0) {
-        const calculatedSavingAmount = remainingAmount / week;
-        setUpdatedSavingAmount(calculatedSavingAmount);
-      }
-    }
+
+    // Calculate and set the goal date
+    calculateAndSetGoalDate(week);console.log('goalDate handel week change 2', goalDate);
   };
   
-  useEffect(() => {
-    if (!isManualInput && goalDuration > 0) {
-      const remainingAmount = savingsGoal - currentlySaved;
+  // useEffect(() => {
+  //   if (!isManualInput && goalDuration > 0) {
+  //     const remainingAmount = savingsGoal - currentlySaved;
   
-      if (remainingAmount > 0) {
-        const calculatedAmount = remainingAmount / goalDuration;
-        setCalculatedSavingAmount(calculatedAmount); // For display
-        setUpdatedSavingAmount(calculatedAmount); // Only update if not manually entered
-      }
+  //     if (remainingAmount > 0) {
+  //       const calculatedAmount = remainingAmount / goalDuration;
+  //       setCalculatedSavingAmount(calculatedAmount); // For display
+  //       setUpdatedSavingAmount(calculatedAmount); // Only update if not manually entered
+  //     }
 
-      console.log('Manual Input Active:', isManualInput);
+  //     console.log('Manual Input Active:', isManualInput);
 
-    }
-  }, [goalDuration, isManualInput, savingsGoal, currentlySaved]);
+  //   }
+  // }, [goalDuration, isManualInput, savingsGoal, currentlySaved]);
   
   const handleSavingAmountChange = (text) => {
     const inputAmount = parseFloat(text.replace(/[^0-9.]/g, '')) || 0;
   
-    // Set the manual input flag
-    setIsManualInput(true);
-    console.log('Manual Input Flag Set:', true);
+    setIsManualInput(true); // ✅ Ensure manual input mode is active
+    setUpdatedSavingAmount(inputAmount); // ✅ Store user-entered value
+  
+    const remainingAmount = savingsGoal - currentlySaved;
+    if (inputAmount > 0) {
+      const calculatedWeeks = Math.ceil(remainingAmount / inputAmount); // ✅ Calculate weeks dynamically
+      setGoalDuration(calculatedWeeks); // ✅ Update goal duration
+      setScrollingWeek(calculatedWeeks); // ✅ Sync carousel
 
-  
-    // Update the manually entered savings amount
-    setUpdatedSavingAmount(inputAmount);
-  
-    // Debounce logic to update weeks based on the manually entered amount
-    if (debounceTimer.current) {
-      clearTimeout(debounceTimer.current);
-    }
-  
-    debounceTimer.current = setTimeout(() => {
-      const remainingAmount = savingsGoal - currentlySaved;
-  
-      if (remainingAmount > 0 && inputAmount > 0) {
-        const calculatedWeeks = Math.ceil(remainingAmount / inputAmount); // Calculate weeks
-        setGoalDuration(calculatedWeeks); // Update goal duration
-        // setScrollingWeek(calculatedWeeks); // Sync carousel with weeks
-  
-        // Update goal date
-        const newGoalDate = new Date(startDate);
-        newGoalDate.setDate(newGoalDate.getDate() + calculatedWeeks * 7);
-        setGoalDate(
-          new Intl.DateTimeFormat('en-US', {
-            month: 'long',  // ✅ Full month name (e.g., "July")
-            day: 'numeric', // ✅ Numeric day (e.g., "10")
-            year: 'numeric' // ✅ Full year (e.g., "2025")
-          }).format(newGoalDate)
-        );
-  
-        const { months, weeks } = calculateMonthsAndWeeks(startDate, newGoalDate);
-        setDisplayDuration(`${months} months${weeks > 0 ? `, ${weeks}` : ''}`);  
-
-        if (carouselRef.current) {
-          setScrollLock(true); // Lock updates during programmatic scrolling
-          carouselRef.current.scrollToWeek(calculatedWeeks); // Sync carousel
-          setTimeout(() => setScrollLock(false), 300); // Unlock after scrolling finishes
-        }
+      if (carouselRef.current) {
+        carouselRef.current.scrollToWeek(calculatedWeeks);
       }
-    }, 500); // Debounce delay
-    console.log('Calc Saving Amount', calculatedSavingAmount);
-    console.log('Updated Saving Amount', updatedSavingAmount);
-
+    }
   };
+  
+  
   
   const calculateMonthsAndWeeks = (startDate, goalDate) => {
     const start = new Date(startDate);
@@ -361,8 +405,6 @@ const DateSelectionScreen = ({ navigation, route }) => {
     });
   };
 
-console.log('Goal date:', goalDate);
-
   return (
     <View style={{ flex: 1 }}>
       <ScrollView bounces={false}>
@@ -382,7 +424,8 @@ console.log('Goal date:', goalDate);
               onScrollWeekChange={handleScrollWeekChange} // Immediate updates for goalDate, goalDuration
               onWeekChange={handleWeekChange} // Finalize updates after scrolling stops
               lockScroll={lockScroll}
-              setScrollLock={setScrollLock} // Pass scrollLock setter
+              setScrollLock={setScrollLock}
+              savingRecurrence={savingRecurrence} // Pass scrollLock setter
             />
           
           
@@ -396,11 +439,12 @@ console.log('Goal date:', goalDate);
               <Text style={styles.label}>Saving amounts</Text>
               <TextInput
                 style={styles.input}
-                value={`$${Math.round(isManualInput ? updatedSavingAmount : calculatedSavingAmount) || 0}`}
-                onChangeText={handleSavingAmountChange} // Handle manual input
+                value={updatedSavingAmount ? `$${Math.ceil(updatedSavingAmount).toString()}` : ''} // ✅ Always show the manually entered value
+                onChangeText={handleSavingAmountChange} // ✅ Allows manual edits
                 placeholderTextColor="#8E9AA5"
                 keyboardType="numeric"
               />
+
 
 
             </View>
@@ -418,7 +462,7 @@ console.log('Goal date:', goalDate);
                 labelField="label"
                 valueField="value"
                 value={savingRecurrence}
-                onChange={(item) => setSavingRecurrence(item.value)}
+                onChange={(item) => handleSavingRecurrenceChange(item.value)}
               />
             </View>
           </View>

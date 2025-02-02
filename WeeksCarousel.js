@@ -7,7 +7,7 @@ const visibleItems = 7;
 const itemWidth = screenWidth / visibleItems;
 
 
-const WeeksCarousel = forwardRef(({ data, selectedWeek, onScrollWeekChange, onWeekChange, lockScroll, setScrollLock }, ref) => {
+const WeeksCarousel = forwardRef(({ data, selectedWeek, onScrollWeekChange, onWeekChange, lockScroll, setScrollLock, savingRecurrence }, ref) => {
   const flatListRef = useRef(null);
   
   const debouncedScroll = useRef(
@@ -36,35 +36,37 @@ const WeeksCarousel = forwardRef(({ data, selectedWeek, onScrollWeekChange, onWe
  
   const handleScroll = useRef(
     _.throttle((offsetX) => {
-      const interpolatedIndex = offsetX / itemWidth; // Calculate fractional index
-      const interpolatedWeek = Math.round(interpolatedIndex + 1); // Approximate the week (1-based)
-  
+      const interpolatedIndex = offsetX / itemWidth;
+      const interpolatedPeriod = Math.round(interpolatedIndex + 1);
+
       if (onScrollWeekChange) {
-        onScrollWeekChange(data[interpolatedWeek - 1]); // Call parent with smooth updates
+        // Don't adjust the period - let parent component handle the conversion
+        const selectedPeriod = data[interpolatedPeriod - 1];
+        onScrollWeekChange(selectedPeriod);
       }
     }, 100)
   ).current;
   
   const handleScrollEvent = (event) => {
-    console.log('Scroll Event Fired: lockScroll =', lockScroll);
     if (lockScroll) return; // Skip updates during programmatic scrolling
   
+
+    console.log('Running handleScrollEvent');
     const offsetX = event?.nativeEvent?.contentOffset?.x;
     if (offsetX != null) {
       handleScroll(offsetX); // Trigger throttled updates
-    }
+    } 
   };
   
   const handleScrollEnd = (event) => {
-    console.log('Scroll End Event Fired: lockScroll =', lockScroll)
-    if (lockScroll) return; // Skip updates during programmatic scrolling
+    if (lockScroll) return;
   
     const offsetX = event.nativeEvent.contentOffset.x;
     const index = Math.round(offsetX / itemWidth);
+    const selectedPeriod = data[index];
   
-    if (onWeekChange) {
-      onWeekChange(data[index]); // Finalize updates
-    }
+    // Don't adjust the period - let parent component handle the conversion
+    onWeekChange(selectedPeriod);
   };
   
   
@@ -81,6 +83,7 @@ const WeeksCarousel = forwardRef(({ data, selectedWeek, onScrollWeekChange, onWe
         setTimeout(() => {
           if (setScrollLock) setScrollLock(false); // Unlock updates after scroll finishes
         }, 300);
+        console.log('scrollToWeek', week);
       }
     },
   }));
@@ -99,15 +102,43 @@ const WeeksCarousel = forwardRef(({ data, selectedWeek, onScrollWeekChange, onWe
             },
           ]}
         />
-        <Text style={[styles.weekText, isSelected && styles.selectedWeekText]}>{item}</Text>
+        <Text style={[styles.weekText, isSelected && styles.selectedWeekText]}>
+          {item}
+        </Text>
         {isSelected && (
           <Text style={[styles.weekText, styles.selectedWeeksText]}>
-              weeks
-            </Text>
+            {getUnitText(item)}
+          </Text>
         )}
       </View>
     );
   };
+  
+  
+  
+
+  const getDisplayNumber = (weekNumber) => {
+    switch(savingRecurrence) {
+      case 'fortnightly':
+        return Math.ceil(weekNumber / 2); // Show half the number for fortnights
+      case 'monthly':
+        return Math.ceil(weekNumber / 4.33); // Show roughly a quarter for months
+      default:
+        return weekNumber;
+    }
+  };
+
+  const getUnitText = (period) => {
+    switch(savingRecurrence) {
+      case 'fortnightly':
+        return period === 1 ? 'fortnight' : 'fortnights';
+      case 'monthly':
+        return period === 1 ? 'month' : 'months';
+      default:
+        return period === 1 ? 'week' : 'weeks';
+    }
+  };
+  
 
   return (
     <FlatList
