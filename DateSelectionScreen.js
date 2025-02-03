@@ -71,7 +71,7 @@ const DateSelectionScreen = ({ navigation, route }) => {
       weekly: 1,
       fortnightly: 2,
       monthly: 4.33
-    };
+    }; 
     const totalWeeks = periods * (weeksPerPeriod[savingRecurrence] || 1);
 
     if (savingRecurrence === 'monthly' && periods < 12) {
@@ -122,23 +122,37 @@ const DateSelectionScreen = ({ navigation, route }) => {
 
   const calculateGoalDetails = (selectedWeeks) => {
     const start = new Date(startDate);
-    start.setDate(start.getDate() + selectedWeeks * 7); // Add weeks to start date
+    
+    switch (savingRecurrence) {
+        case 'fortnightly':
+            start.setDate(start.getDate() + (selectedWeeks * 14));
+            break;
+        case 'monthly':
+            start.setMonth(start.getMonth() + selectedWeeks);
+            break;
+        case 'weekly':
+        default:
+            start.setDate(start.getDate() + (selectedWeeks * 7));
+            break;
+    }
+
     const remainingAmount = savingsGoal - currentlySaved;
     const newSavingAmount =
-      selectedWeeks > 0 ? Math.ceil(remainingAmount / selectedWeeks) : savingAmount;
+        selectedWeeks > 0 ? Math.ceil(remainingAmount / selectedWeeks) : savingAmount;
 
-      const formattedGoalDate = new Intl.DateTimeFormat('en-US', {
-        month: 'long',  // ✅ Full month name (e.g., "July")
-        day: 'numeric', // ✅ Numeric day (e.g., "10")
-        year: 'numeric' // ✅ Full year (e.g., "2025")
-      }).format(start);
-       // Format to "10 July 2025"
+    console.log('selectedWeeks', selectedWeeks);
+    console.log('goalDate', goalDate);
+
+    const formattedGoalDate = new Intl.DateTimeFormat('en-US', {
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric'
+    }).format(start);
 
     return {
-      goalDate: formattedGoalDate,
-      savingAmount: newSavingAmount
+        goalDate: formattedGoalDate,
+        savingAmount: newSavingAmount
     }; 
-
   };
   
   
@@ -153,18 +167,20 @@ const DateSelectionScreen = ({ navigation, route }) => {
         setScrollingWeek(0);
         return;
       }
+
+      console.log('Running calculateInitialDetails');
   
       const intervalWeeks = frequencyMap[savingRecurrence] || 1;
       // Calculate required periods based on frequency
       const periodsRequired = Math.ceil(remainingAmount / (updatedSavingAmount));
       // Convert periods to total weeks for date calculation
       const totalWeeks = periodsRequired * intervalWeeks;
-      const { goalDate } = calculateGoalDetails(totalWeeks);
+      const { goalDate } = calculateGoalDetails(periodsRequired);
   
       setGoalDuration(periodsRequired); // Set number of periods (weeks/fortnights/months)
       setScrollingWeek(periodsRequired); // Align scrolling with periods
       setGoalDate(goalDate);
-      
+
       setTimeout(() => {
         if (carouselRef.current) {
           carouselRef.current.scrollToWeek(periodsRequired);
@@ -187,13 +203,13 @@ const DateSelectionScreen = ({ navigation, route }) => {
     const newIntervalFactor = frequencyMap[value]; // New frequency
   
     // ✅ Keep the same number of contributions, but adjust total duration in real time
-    let totalPeriods = goalDuration * newIntervalFactor;
     let activeCarousel = goalDuration; // Maintain the number of savings contributions (40 weeks → 40 fortnights)
-    let totalDaysNeeded = totalPeriods * (newIntervalFactor * 7); // Convert periods into total days
+    let totalDaysNeeded = goalDuration * (newIntervalFactor * 7); // Convert periods into total days
   
-    setGoalDuration(totalPeriods);
+    setGoalDuration(goalDuration);
     setScrollingWeek(activeCarousel);
     console.log('activeCarousel', activeCarousel);
+    console.log('goalDate recurrence change', goalDate);
   
     // ✅ Correctly update goal date based on new total duration
     const newGoalDate = new Date(startDate);
@@ -210,6 +226,9 @@ const DateSelectionScreen = ({ navigation, route }) => {
       carouselRef.current.scrollToWeek(activeCarousel); // Scroll using the same period count
     }
   
+
+    console.log('goalDate recurrence change 2 ', goalDate);
+
     setTimeout(() => {
       recurrenceJustChanged.current = false;
     }, 600);
@@ -245,6 +264,7 @@ const DateSelectionScreen = ({ navigation, route }) => {
         }).format(newGoalDate)
     );
 
+    console.log('Goal date calculateAndSetGoalDate', goalDate);
     const remainingAmount = savingsGoal - currentlySaved;
     if (remainingAmount > 0 && week > 0) {
         const calculatedSavingAmount = Math.ceil(remainingAmount / week);
@@ -277,9 +297,11 @@ const DateSelectionScreen = ({ navigation, route }) => {
 
     setGoalDuration(week);
     setScrollingWeek(week);
+    console.log('Running handleWeekChange');
 
     // Calculate and set the goal date
-    calculateAndSetGoalDate(week);console.log('goalDate handel week change 2', goalDate);
+    calculateAndSetGoalDate(week);
+    console.log('goalDate handel week change 2', goalDate);
   };
   
   // useEffect(() => {
@@ -376,20 +398,35 @@ const DateSelectionScreen = ({ navigation, route }) => {
   const generatePayments = (startDate, savingAmount, frequency, weeksUntilGoal) => {
     const payments = [];
     let currentDate = new Date(startDate);
-  
+
     for (let i = 0; i < weeksUntilGoal; i++) {
-      payments.push({
-        date: new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', year: 'numeric' }).format(currentDate),
-        amount: savingAmount,
-        totalAfter: currentlySaved + (savingAmount * (i + 1)), // Calculate total after payment
-        type: "Deposit",  // Assume deposits only for now
-        method: "Automatic", // Assume automatic for now
-      });
-  
-      // Move date based on saving frequency
-      currentDate.setDate(currentDate.getDate() + (frequency === "weekly" ? 7 : frequency === "fortnightly" ? 14 : 30));
+        payments.push({
+            date: new Intl.DateTimeFormat('en-US', { 
+                month: 'long', 
+                day: 'numeric', 
+                year: 'numeric' 
+            }).format(currentDate),
+            amount: savingAmount,
+            totalAfter: currentlySaved + (savingAmount * (i + 1)),
+            type: "Deposit",
+            method: "Automatic",
+        });
+
+        // Move date based on saving frequency
+        switch (frequency) {
+            case 'fortnightly':
+                currentDate.setDate(currentDate.getDate() + 14);
+                break;
+            case 'monthly':
+                currentDate.setMonth(currentDate.getMonth() + 1);
+                break;
+            case 'weekly':
+            default:
+                currentDate.setDate(currentDate.getDate() + 7);
+                break;
+        }
     }
-  
+
     return payments;
   };
 
@@ -436,7 +473,7 @@ const DateSelectionScreen = ({ navigation, route }) => {
         <View style={styles.formContainer}>
           <View style={styles.rowGroup}>
             <View style={styles.halfInput}>
-              <Text style={styles.label}>Saving amounts</Text>
+              <Text style={styles.label}>Saving amount  </Text>
               <TextInput
                 style={styles.input}
                 value={updatedSavingAmount ? `$${Math.ceil(updatedSavingAmount).toString()}` : ''} // ✅ Always show the manually entered value
