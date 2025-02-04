@@ -25,7 +25,15 @@ const DateSelectionScreen = ({ navigation, route }) => {
     Lato_700Bold,
   });
   const carouselRef = useRef(null);
-  const { startDate, savingsGoal, savingAmount, frequency, currentlySaved } = route.params;
+  const { 
+    startDate, 
+    savingsGoal, 
+    savingAmount, 
+    savingRecurrence: initialRecurrence, 
+    currentlySaved 
+  } = route.params;
+
+  //just making sure this is the right version
 
   const [goalDate, setGoalDate] = useState('');
   const [goalDuration, setGoalDuration] = useState(0); // number of periods (weeks, fortnights, or months)
@@ -33,7 +41,7 @@ const DateSelectionScreen = ({ navigation, route }) => {
   const [scrollingWeek, setScrollingWeek] = useState(0);
   const [updatedSavingAmount, setUpdatedSavingAmount] = useState(savingAmount);
   const [motivation, setMotivation] = useState('');
-  const [savingRecurrence, setSavingRecurrence] = useState(frequency);
+  const [savingRecurrence, setSavingRecurrence] = useState(initialRecurrence);
   const recurrenceJustChanged = useRef(false);
   const debounceTimer = useRef(null);
   const [isManualInput, setIsManualInput] = useState(false);
@@ -56,46 +64,67 @@ const DateSelectionScreen = ({ navigation, route }) => {
 
   const [weeks, setWeeks] = useState(generateDataArray(savingRecurrence));
 
+  // Add useEffect to track state and route param changes
+  useEffect(() => {
+    console.log('Recurrence values:', {
+      stateRecurrence: savingRecurrence,
+      routeRecurrence: route.params.savingRecurrence,
+      initialRecurrence
+    });
+  }, [savingRecurrence, route.params.savingRecurrence]);
+
   // ─── HELPER FUNCTIONS FOR GOAL DATE CALCULATION ───────────────────────────────
-  // Computes a new date by adding the correct number of days/months based on recurrence.
   const computeGoalDate = (baseDate, periods, recurrence) => {
+    // Always use the current state value, not the passed parameter
+    const currentRecurrence = savingRecurrence;
+    
+    console.log('Computing goal date with:', {
+      currentRecurrence,
+      stateRecurrence: savingRecurrence,
+      passedRecurrence: recurrence
+    });
+    
     const date = new Date(baseDate);
-    switch (recurrence) {
-      case 'fortnightly':
-        date.setDate(date.getDate() + periods * 14);
-        break;
+    
+    switch (currentRecurrence) {
       case 'monthly':
         date.setMonth(date.getMonth() + periods);
         break;
-      case 'weekly':
-      default:
-        date.setDate(date.getDate() + periods * 7);
+      case 'fortnightly':
+        date.setDate(date.getDate() + (periods * 14));
         break;
+      case 'weekly':
+        date.setDate(date.getDate() + (periods * 7));
+        break;
+      default:
+        console.warn('Unknown recurrence type:', currentRecurrence);
+        date.setDate(date.getDate() + (periods * 7));
     }
-    console.log('Goal date compute goal date', date);
+    
     return date;
   };
 
   // Updates the goal date and recalculates the saving amount based on the current period count.
   const updateGoalDate = (periods) => {
+    console.log('Updating goal date with:', {
+      periods,
+      currentRecurrence: savingRecurrence
+    });
+
     const newDate = computeGoalDate(startDate, periods, savingRecurrence);
     const formattedDate = new Intl.DateTimeFormat('en-US', {
       month: 'long',
       day: 'numeric',
       year: 'numeric'
     }).format(newDate);
+    
     setGoalDate(formattedDate);
+    
     const remainingAmount = savingsGoal - currentlySaved;
     if (remainingAmount > 0 && periods > 0) {
       const newSavingAmt = Math.ceil(remainingAmount / periods);
       setUpdatedSavingAmount(newSavingAmt);
     }
-    console.log('Periods', periods);
-    console.log('Goal date update goal date', goalDate);
-    console.log('New date update goal date', newDate);
-    console.log('Formatted date update goal date', formattedDate);
-
-
   };
 
 
@@ -166,25 +195,47 @@ const DateSelectionScreen = ({ navigation, route }) => {
       console.log('Goal date initial details', goalDate);
     };
     calculateInitialDetails();
-  }, [savingsGoal, savingAmount, frequency, currentlySaved, savingRecurrence]);
+  }, [savingsGoal, savingAmount, savingRecurrence, currentlySaved]);
 
 
   // ─── EVENT HANDLERS ─────────────────────────────────────────────────────────────
   // When the user changes the saving recurrence (weekly, fortnightly, monthly)
   const handleSavingRecurrenceChange = (value) => {
+    console.log('Recurrence changing to:', value);
     recurrenceJustChanged.current = true;
     setSavingRecurrence(value);
+    
+    // Update route params
+    navigation.setParams({
+      ...route.params,
+      savingRecurrence: value
+    });
+    
     setWeeks(generateDataArray(value));
-    // Recalculate the goal date using the current period count
-    updateGoalDate(goalDuration);
+    
+    // Ensure we're using the new value for date calculation
+    const newDate = computeGoalDate(startDate, goalDuration, value);
+    const formattedDate = new Intl.DateTimeFormat('en-US', {
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric'
+    }).format(newDate);
+    
+    setGoalDate(formattedDate);
+
     if (carouselRef.current) {
       carouselRef.current.scrollToWeek(goalDuration);
     }
+
+    console.log('After recurrence change:', {
+      newRecurrence: value,
+      stateRecurrence: savingRecurrence,
+      routeRecurrence: route.params.savingRecurrence
+    });
+
     setTimeout(() => {
       recurrenceJustChanged.current = false;
     }, 600);
-    console.log('Running handleSavingRecurrenceChange');
-    console.log('Goal date saving recurrence change', goalDate);
   };
 
   // Called during scrolling to immediately update the goal date
@@ -274,7 +325,7 @@ const DateSelectionScreen = ({ navigation, route }) => {
   const remainingAmount = savingsGoal - currentlySaved;
   const weeksUntilGoal = remainingAmount > 0 ? Math.ceil(remainingAmount / savingAmount) : 0;
 
-  const generatePayments = (startDate, savingAmount, frequency, weeksUntilGoal) => {
+  const generatePayments = (startDate, savingAmount, savingRecurrence, weeksUntilGoal) => {
     const payments = [];
     let currentDate = new Date(startDate);
     for (let i = 0; i < weeksUntilGoal; i++) {
@@ -289,7 +340,7 @@ const DateSelectionScreen = ({ navigation, route }) => {
         type: "Deposit",
         method: "Automatic",
       });
-      switch (frequency) {
+      switch (savingRecurrence) {
         case 'fortnightly':
           currentDate.setDate(currentDate.getDate() + 14);
           break;

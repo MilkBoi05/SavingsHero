@@ -379,7 +379,8 @@ const SavingsGoalScreen = ({ navigation, route }) => {
             return; // Prevent navigation
           }
             
-          console.log('Contribution amount 1', values.savingAmount)  
+          console.log('Contribution amount 1', values.savingAmount)
+          console.log('Saving recurrence', savingRecurrence)
 
           // If no errors, navigate to the next screen
           setErrors({}); // Clear any previous errors
@@ -387,7 +388,7 @@ const SavingsGoalScreen = ({ navigation, route }) => {
             startDate: selectedDate, // Pass selected start date
             savingsGoal: parseFloat(values.goalAmount.replace(/[^0-9.]/g, '')) || 0,
             savingAmount: parseFloat(values.savingAmount.replace(/[^0-9.]/g, '')) || 0,
-            frequency: savingRecurrence,
+            savingRecurrence: savingRecurrence,
             currentlySaved: parseFloat(values.currentlySaved.replace(/[^0-9.]/g, '')) || 0,
           });
           

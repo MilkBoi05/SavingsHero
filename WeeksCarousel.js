@@ -38,11 +38,14 @@ const WeeksCarousel = forwardRef(({ data, selectedWeek, onScrollWeekChange, onWe
     _.throttle((offsetX) => {
       const interpolatedIndex = offsetX / itemWidth;
       const interpolatedPeriod = Math.round(interpolatedIndex + 1);
+      console.log('interpolatedPeriod', interpolatedPeriod);
+      console.log('interpolatedIndex', interpolatedIndex);
 
       if (onScrollWeekChange) {
         // Don't adjust the period - let parent component handle the conversion
         const selectedPeriod = data[interpolatedPeriod - 1];
         onScrollWeekChange(selectedPeriod);
+        console.log('selectedPeriod', selectedPeriod);
       }
     }, 100)
   ).current;
