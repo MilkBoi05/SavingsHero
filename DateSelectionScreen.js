@@ -17,6 +17,7 @@ import styles from './styles';
 import { MaterialIcons } from '@expo/vector-icons';
 import NotificationsOnboarding from './NotificationsOnboarding';
 
+
 const DateSelectionScreen = ({ navigation, route }) => {
   const [fontsLoaded] = useFonts({
     Merriweather_900Black,
@@ -64,7 +65,7 @@ const DateSelectionScreen = ({ navigation, route }) => {
 
   const [weeks, setWeeks] = useState(generateDataArray(savingRecurrence));
 
-  // Add useEffect to track state and route param changes
+  // Add useEffect to track state and route param changes 
   useEffect(() => {
     console.log('Recurrence values:', {
       stateRecurrence: savingRecurrence,

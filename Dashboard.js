@@ -7,6 +7,10 @@ import { useFonts } from 'expo-font';
 import { RussoOne_400Regular } from '@expo-google-fonts/russo-one';
 import { Lato_700Bold, Lato_400Regular } from '@expo-google-fonts/lato';
 import styles from './styles';
+import { WebView } from 'react-native-webview';
+import MoneyJar from './MoneyJar';
+
+//Test
 
 const LogoImg = require('./assets/Logo.png');
 
@@ -138,13 +142,17 @@ console.log("Raw payments data:", goalData?.payments);
       <Text style={styles.goalTextWeeks}>{goalData?.weeksUntilGoal ?? 'N/A'} weeks to go!</Text>
       <Text style={styles.goalText}>You’ll hit your goal by <Text style={{ color: '#9913FF', fontWeight: 'bold' }}>{goalData?.goalDate}</Text></Text>
       <TouchableOpacity 
-  onPress={resetGoal} // Calls the new function
-  style={styles.resetButton}
->
-  <Text style={styles.resetButtonText}>Reset Goal</Text>
-  <View style={{ flex: 1, backgroundColor: '#FFFFFF' }} />
-</TouchableOpacity>
+        onPress={resetGoal} // Calls the new function
+        style={styles.resetButton}
+      >
+      <Text style={styles.resetButtonText}>Reset Goal</Text>
+      <View style={{ flex: 1, backgroundColor: '#FFFFFF' }} />
+      </TouchableOpacity>
+      <View style={styles.moneyJarContainer}>
+        <MoneyJar />
+      </View>
       <PanGestureHandler onHandlerStateChange={handleGestureEnd}>
+
         <Animated.View style={[styles.tray, { transform: [{ translateY: animatedValue }] }]}> 
           <View style={styles.trayHandle} />
           <View style={styles.trayHeader}>
@@ -160,14 +168,14 @@ console.log("Raw payments data:", goalData?.payments);
             </TouchableOpacity>
           </View>
           <ScrollView
-  contentContainerStyle={{ flexGrow: 1, paddingBottom: 20, minHeight: 600, paddingBottom: 100 }} // Ensures a minimum height
-  style={styles.paymentList}
-  nestedScrollEnabled={true}
-  scrollEventThrottle={16}
-  onScrollBeginDrag={() => setIsScrolling(true)}
-  onMomentumScrollEnd={() => setTimeout(() => setIsScrolling(false), 100)}
-  onScrollEndDrag={() => setTimeout(() => setIsScrolling(false), 100)}
->
+            contentContainerStyle={{ flexGrow: 1, paddingBottom: 20, minHeight: 600, paddingBottom: 100 }} // Ensures a minimum height
+            style={styles.paymentList}
+            nestedScrollEnabled={true}
+            scrollEventThrottle={16}
+            onScrollBeginDrag={() => setIsScrolling(true)}
+            onMomentumScrollEnd={() => setTimeout(() => setIsScrolling(false), 100)}
+            onScrollEndDrag={() => setTimeout(() => setIsScrolling(false), 100)}
+          >
 
             {filteredPayments.length > 0 ? (
               filteredPayments.map((payment, index) => (

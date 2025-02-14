@@ -549,6 +549,14 @@ const styles = StyleSheet.create({
   alignItems: 'center',
   backgroundColor: '#FFF',
 },
+moneyJarContainer: {
+  backgroundColor: 'transparent',
+  width: '100%',
+  height: 400,  // Adjust height as needed
+  justifyContent: 'center',
+  alignItems: 'center',
+},
+
 
   
   
