@@ -8,7 +8,7 @@ import { RussoOne_400Regular } from '@expo-google-fonts/russo-one';
 import { Lato_700Bold, Lato_400Regular } from '@expo-google-fonts/lato';
 import styles from './styles';
 import { WebView } from 'react-native-webview';
-import MoneyJar from './MoneyJar';
+import MoneyJarWrapper from './MoneyJarWrapper';
 
 //Test
 
@@ -91,7 +91,7 @@ goalData?.payments?.forEach((payment) => {
 
   if (!match) {
     console.warn(`Invalid date format: ${payment.date}`);
-    return; // Skip this entry if it doesn’t match expected format
+    return; // Skip this entry if it doesn't match expected format
   }
 
   const [, monthName, day, year] = match; // Extract parts
@@ -140,17 +140,18 @@ console.log("Raw payments data:", goalData?.payments);
         <Text style={styles.title}>SavingsHero</Text>
       </View>
       <Text style={styles.goalTextWeeks}>{goalData?.weeksUntilGoal ?? 'N/A'} weeks to go!</Text>
-      <Text style={styles.goalText}>You’ll hit your goal by <Text style={{ color: '#9913FF', fontWeight: 'bold' }}>{goalData?.goalDate}</Text></Text>
+      <Text style={styles.goalText}>You'll hit your goal by <Text style={{ color: '#9913FF', fontWeight: 'bold' }}>{goalData?.goalDate}</Text></Text>
       <TouchableOpacity 
         onPress={resetGoal} // Calls the new function
         style={styles.resetButton}
       >
-      <Text style={styles.resetButtonText}>Reset Goal</Text>
-      <View style={{ flex: 1, backgroundColor: '#FFFFFF' }} />
+        <Text style={styles.resetButtonText}>Reset Goal</Text>
       </TouchableOpacity>
+      
       <View style={styles.moneyJarContainer}>
-        <MoneyJar />
+        <MoneyJarWrapper />
       </View>
+      
       <PanGestureHandler onHandlerStateChange={handleGestureEnd}>
 
         <Animated.View style={[styles.tray, { transform: [{ translateY: animatedValue }] }]}> 

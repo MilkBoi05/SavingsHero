@@ -552,9 +552,12 @@ const styles = StyleSheet.create({
 moneyJarContainer: {
   backgroundColor: 'transparent',
   width: '100%',
-  height: 400,  // Adjust height as needed
+  height: 400,
   justifyContent: 'center',
   alignItems: 'center',
+  overflow: 'hidden', // Ensure content doesn't overflow
+  position: 'relative', // For proper positioning
+  zIndex: 1, // Ensure it's above other elements
 },
 
 

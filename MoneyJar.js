@@ -1,12 +1,8 @@
 // Top-level log to verify if MoneyJar.js is loaded
 console.log("MoneyJar file loaded");
 
-// Log the asset module to verify the relative path and asset resolution
-const assetModule = require('./assets/MoneyJar.glb');
-console.log("Asset module:", assetModule);
-
 import React, { Suspense, useState, useEffect } from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, Dimensions } from 'react-native';
 import { Canvas } from '@react-three/fiber/native';
 import { useGLTF } from '@react-three/drei/native';
 import { Asset } from 'expo-asset';
@@ -26,6 +22,7 @@ if (typeof document === 'undefined') {
 // Custom hook with extended logging to load an asset and get its URI
 function useAssetWithLogging(assetModule) {
   const [uri, setUri] = useState(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     async function loadAsset() {
@@ -41,44 +38,110 @@ function useAssetWithLogging(assetModule) {
         setUri(finalUri);
       } catch (err) {
         console.error("useAssetWithLogging: Error loading asset:", err);
+        setError(err);
       }
     }
     loadAsset();
   }, [assetModule]);
 
-  return uri;
+  return { uri, error };
 }
 
-const MoneyJarModel = () => {
-  console.log("MoneyJarModel: Rendered");
-  // Use the logged assetModule constant above
-  const glbUri = useAssetWithLogging(assetModule);
-
-  if (!glbUri) {
-    return <Text>Loading Model...</Text>;
+// This component will be rendered inside the Canvas
+const MoneyJarModel = ({ uri }) => {
+  console.log("MoneyJarModel: Rendered with URI:", uri);
+  
+  if (!uri) {
+    return null;
   }
+  
+  try {
+    // Use the useGLTF hook to load the GLB model
+    const { scene } = useGLTF(uri);
+    return <primitive object={scene} dispose={null} scale={0.5} />;
+  } catch (err) {
+    console.error("Error rendering GLB:", err);
+    // Fallback to a simple shape if there's an error
+    return (
+      <mesh>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshStandardMaterial color="purple" />
+      </mesh>
+    );
+  }
+};
 
-  console.log("MoneyJarModel: Loaded GLB URI:", glbUri);
-  const { scene } = useGLTF(glbUri);
-
-  return <primitive object={scene} dispose={null} scale={0.5} />;
+// Simple fallback component for when 3D rendering fails
+const FallbackComponent = () => {
+  return (
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <Text style={{ fontSize: 16, textAlign: 'center', color: '#666' }}>
+        Unable to load 3D model
+      </Text>
+      <Text style={{ fontSize: 14, textAlign: 'center', marginTop: 5, color: '#999' }}>
+        Please check your device compatibility
+      </Text>
+    </View>
+  );
 };
 
 const MoneyJar = () => {
+  const [dimensions, setDimensions] = useState(Dimensions.get('window'));
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [renderError, setRenderError] = useState(false);
+  
+  // Use require to load the untitled.glb file instead of MoneyJar.glb
+  const assetModule = require('./assets/untitled.glb');
+  const { uri, error: assetError } = useAssetWithLogging(assetModule);
+  
   useEffect(() => {
     console.log("MoneyJar component mounted");
+    
+    // Handle dimension changes
+    const subscription = Dimensions.addEventListener('change', ({ window }) => {
+      setDimensions(window);
+    });
+    
+    return () => {
+      subscription.remove();
+    };
   }, []);
   
+  useEffect(() => {
+    if (uri) {
+      setIsLoading(false);
+    }
+    
+    if (assetError) {
+      setError(assetError.message);
+      setIsLoading(false);
+    }
+  }, [uri, assetError]);
+  
+  // If there's a rendering error, show the fallback component
+  if (renderError) {
+    return <FallbackComponent />;
+  }
+  
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, width: '100%', height: '100%' }}>
+      {isLoading && <Text style={{ textAlign: 'center', marginTop: 20 }}>Loading Model...</Text>}
+      {error && <Text style={{ textAlign: 'center', marginTop: 20, color: 'red' }}>Error: {error}</Text>}
+      
       <Canvas
         style={{ flex: 1 }}
-        camera={{ position: [0, 1, 3] }} // Adjust camera position if needed
+        camera={{ position: [0, 1, 3], fov: 50 }}
+        gl={{ antialias: true }}
+        onError={(err) => {
+          console.error("Canvas error:", err);
+          setRenderError(true);
+        }}
       >
         <ambientLight intensity={0.5} />
         <directionalLight intensity={0.8} position={[0, 1, 1]} />
-        <Suspense fallback={<Text>Loading 3D Model...</Text>}>
-          <MoneyJarModel />
+        <Suspense fallback={null}>
+          {uri && <MoneyJarModel uri={uri} />}
         </Suspense>
       </Canvas>
     </View>
